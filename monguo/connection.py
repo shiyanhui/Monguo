@@ -8,9 +8,7 @@ class Connection(object):
 
     DEFAULT_CONNECTION_NAME = 'default'
 
-    _connection_args = {}
-    _connections     = {}
-
+    _connections        = {}
     _default_connection = None
     _default_db         = None
 
@@ -24,7 +22,6 @@ class Connection(object):
         except Exception, e:
             raise ConnectionErroe('Cant\'t connect to mongdb.')
 
-        Connection._connection_setting[connection_name] = {'args': args, 'kwargs': kwargs}
         Connection._connections[connection_name] = connection
 
         Connection._default_connection = connection_name

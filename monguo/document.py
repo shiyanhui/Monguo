@@ -3,9 +3,13 @@
 import inspect
 import motor
 import functools
+
+import util
+
 from tornado import gen
 
-from connection import collection
+from connection import Connection
+from error import *
 from field import *
 
 def validate(monguo_cls, motor_method, has_write_concern):
@@ -46,28 +50,27 @@ class MonguoMetaClass(type):
 						setattr(new_class, name, new_attr)
 		return new_class
 
-class Document(object):
-	__delegate_class__ = motor.Collection
-	__metaclass__ = MonguoMetaClass
+class BaseDocument(object):
+
+	meta = {}
 
 	@classmethod
 	def get_collection(cls):
-		if 'alias' in cls.meta:
-			connection = Connection.get_connection(cls.meta['alias'])
-		else:
-			connection = Connection.get_connection()
+		connection_name = cls.meta['connection'] if 'connection' in cls.meta else None
+		db_name = cls.meta['db'] if 'db' in cls.meta else None 
 
-		if 'db' in cls.meta:
-			db = connection[cls.meta['db']]
-		else:
-			db = Connection.get_db()
+		db = Connection.get_db(connection_name, db_name)
+		if db is None:
+			raise ConnectionError('mongodb not connected!')
 
-		if 'collection' in cls.meta:
-			collection = db[cls.meta['collection']]
-		else:
-			collection = db[cls.__name__]
+		collection_name = cls.meta['collection'] if 'collection' in cls.meta else 
+			util.camel_to_underline(cls.__name__) 
+		collection = db[collection_name]
 		return collection
 
+class Document(BaseDocument):
+	__delegate_class__ = motor.Collection
+	__metaclass__ = MonguoMetaClass
 
 	create_index 	  = CommandAttribute()
 	drop_indexes      = CommandAttribute()
