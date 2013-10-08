@@ -10,5 +10,5 @@ class Field(object):
 		return None
 
 class StringField(Field):
-	pass
+	print 'hello'
 

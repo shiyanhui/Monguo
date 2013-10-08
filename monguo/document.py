@@ -14,7 +14,7 @@ def validate(monguo_cls, motor_method, has_write_concern):
 	def method(cls, *args, **kwargs):
 		return cls._collection.find_one()
 	return method
-		
+
 class MonguoAttributeFactory(object):
 	def __init__(self, has_write_concern):
 		self.has_write_concern = has_write_concern
@@ -50,8 +50,8 @@ class Document(object):
 	__delegate_class__ = motor.Collection
 	__metaclass__ = MonguoMetaClass
 
-	_collection = collection
-
+	_meta = {}
+	
 	create_index 	  = CommandAttribute()
 	drop_indexes      = CommandAttribute()
 	drop_index  	  = CommandAttribute()
@@ -76,4 +76,4 @@ class Document(object):
 	uuid_subtype      = motor.ReadWriteProperty()
 	full_name         = motor.ReadOnlyProperty()
 
-	
+
