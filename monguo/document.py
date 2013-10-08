@@ -50,8 +50,25 @@ class Document(object):
 	__delegate_class__ = motor.Collection
 	__metaclass__ = MonguoMetaClass
 
-	_meta = {}
-	
+	@classmethod
+	def get_collection(cls):
+		if 'alias' in cls.meta:
+			connection = Connection.get_connection(cls.meta['alias'])
+		else:
+			connection = Connection.get_connection()
+
+		if 'db' in cls.meta:
+			db = connection[cls.meta['db']]
+		else:
+			db = Connection.get_db()
+
+		if 'collection' in cls.meta:
+			collection = db[cls.meta['collection']]
+		else:
+			collection = db[cls.__name__]
+		return collection
+
+
 	create_index 	  = CommandAttribute()
 	drop_indexes      = CommandAttribute()
 	drop_index  	  = CommandAttribute()
