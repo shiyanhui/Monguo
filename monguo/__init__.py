@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-VERSION = (0, 1, 0)
+VERSION = (0, 1)
 
 def get_version():
 	if isinstance(VERSION[-1], basestring):

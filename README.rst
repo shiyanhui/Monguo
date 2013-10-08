@@ -3,7 +3,8 @@ Monguo
 ======
 
 .. image:: https://github.com/shiyanhui/monguo/blob/master/doc/source/_static/monguo.jpg?raw=true
-
+	:width: 200px
+	
 :Info: Monguo is a full-featured, asynchronous MongoDB_ ORM with Motor_ dirver for Pytnon Tornado_ applications.
 :Author: Lime.Shi Yanhui
 
