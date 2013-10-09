@@ -3,10 +3,7 @@
 import motor
 from error import *
 
-
 class Connection(object):
-
-	'''Connection to MongoDB.'''
 
     DEFAULT_CONNECTION_NAME = 'default'
 
@@ -17,13 +14,16 @@ class Connection(object):
     @classmethod
     def connect(
             cls, db_name=None, 
-            connection_name=Connection.DEFAULT_CONNECTION_NAME, 
+            connection_name=None, 
             replica_set=False, *args, **kwargs):
-        
+
+        if connection_name is None:
+            connection_name = Connection.DEFAULT_CONNECTION_NAME
+
         Connection.disconnect(connection_name)
 
-        client_class = motor.MotorReplicaSetClient if replica_set else 
-            motor.MotorClient
+        client_class = (motor.MotorReplicaSetClient if replica_set else 
+                        motor.MotorClient)
         try:
             connection = client_class(*args, **kwargs).open_sync()
         except Exception, e:
@@ -50,19 +50,21 @@ class Connection(object):
         if connection_name is None:
             connection_name = Connection._default_connection
 
-        return None if connection_name not in Connection._connections else 
-            Connection._connections[connection_name]
+        return (None if connection_name not in Connection._connections else 
+                Connection._connections[connection_name])
 
     @classmethod
     def get_db(cls, connection_name=None, db_name=None):
         connection = Connection.get_connection(connection_name)
         if connection is None:
-            return None
+            raise ConnectionError('mongdb has not been connected!')
 
         if db_name is None:
             db_name = Connection._default_db
+        if db_name is None:
+            raise ConnectionError('please set a database first!')
 
-        return None if db_name is None else connection[db_name]
+        return connection[db_name]
 
     @classmethod
     def switch_connection(cls, connection_name):

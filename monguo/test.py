@@ -1,14 +1,21 @@
 # -*- coding: utf-8 -*-
 
+import motor
+import sys
+
 from tornado import gen
-from monguo.document import Document
+from tornado.ioloop import IOLoop
+
+from document import Document
+from connection import Connection
+from field import *
 
 class UserDocument(Document):
     name = StringField()
     sex = StringField()
 
     meta = {
-        'collection': 'hello'
+        'collection': 'test'
     }
 
     @classmethod
@@ -19,3 +26,11 @@ class UserDocument(Document):
             'sex': 'male'
         }
         raise gen.Return(user)
+
+@gen.coroutine
+def test():
+    Connection.connect('test')
+    count = yield UserDocument.get_user()
+    print count
+
+IOLoop.current().run_sync(test)

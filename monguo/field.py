@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-__all__ = ['Filed']
+__all__ = ['Field', 'StringField']
 
 class Field(object):
     def __init__(
@@ -15,12 +15,8 @@ class Field(object):
 	def __get__(self, instance, owner):
 		return self.value
 
-	def __set__(self, instance, value):
-        if self.validate(value):
-            self.value = value
-
-	def validate(self):
-        pass
+    def __set__(self, instance, value):
+        self.value = value
 
 
 class StringField(Field):
