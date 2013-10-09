@@ -3,18 +3,19 @@
 import motor
 from error import *
 
+
 class Connection(object):
 
     DEFAULT_CONNECTION_NAME = 'default'
 
-    _connections        = {}
+    _connections = {}
     _default_connection = None
-    _default_db         = None
+    _default_db = None
 
     @classmethod
     def connect(
-            cls, db_name=None, 
-            connection_name=None, 
+            cls, db_name=None,
+            connection_name=None,
             replica_set=False, *args, **kwargs):
 
         if connection_name is None:
@@ -22,7 +23,7 @@ class Connection(object):
 
         Connection.disconnect(connection_name)
 
-        client_class = (motor.MotorReplicaSetClient if replica_set else 
+        client_class = (motor.MotorReplicaSetClient if replica_set else
                         motor.MotorClient)
         try:
             connection = client_class(*args, **kwargs).open_sync()
@@ -50,7 +51,7 @@ class Connection(object):
         if connection_name is None:
             connection_name = Connection._default_connection
 
-        return (None if connection_name not in Connection._connections else 
+        return (None if connection_name not in Connection._connections else
                 Connection._connections[connection_name])
 
     @classmethod

@@ -10,6 +10,7 @@ from document import Document
 from connection import Connection
 from field import *
 
+
 class UserDocument(Document):
     name = StringField()
     sex = StringField()
@@ -26,6 +27,7 @@ class UserDocument(Document):
             'sex': 'male'
         }
         raise gen.Return(user)
+
 
 @gen.coroutine
 def test():
