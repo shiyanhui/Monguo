@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import motor
-from error import *
 
+from error import *
 
 class Connection(object):
 
@@ -28,7 +28,7 @@ class Connection(object):
         try:
             connection = client_class(*args, **kwargs).open_sync()
         except Exception, e:
-            raise ConnectionErroe('Cant\'t connect to mongdb.')
+            raise ConnectionError('Cant\'t connect to mongdb.')
 
         Connection._connections[connection_name] = connection
 

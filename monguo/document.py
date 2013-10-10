@@ -3,20 +3,35 @@
 import inspect
 import motor
 import functools
+import types
 import util
 
 from tornado import gen
 from connection import Connection
+from manipulator import MonguoSONManipulator
 from error import *
 from field import *
 
-
-def validate(monguo_cls, motor_mothod, has_write_concern):
+def bound_method(monguo_cls, motor_method, has_write_concern):
     @classmethod
     def method(cls, *args, **kwargs):
         collection = cls.get_collection()
-        bound_method = getattr(collection, motor_mothod)
-        return bound_method(*args, **kwargs)
+
+        son = None
+        if has_write_concern and motor_method == 'update':
+            try:
+                son = kwargs.get('document') or args[1]
+            except IndexError, e:
+                raise SyntaxError('lack of document argument')
+
+            if not isinstance(son, dict):
+                raise TypeError('document argument should be a dict type.')
+
+        collection.database.add_son_manipulator(
+                        MonguoSONManipulator(cls, motor_method, son))
+
+        new_method = getattr(collection, motor_method)
+        return new_method(*args, **kwargs)
     return method
 
 class MonguoAttributeFactory(object):
@@ -24,7 +39,7 @@ class MonguoAttributeFactory(object):
         self.has_write_concern = has_write_concern
 
     def create_attribute(self, cls, attr_name):
-        return validate(cls, attr_name, self.has_write_concern)
+        return bound_method(cls, attr_name, self.has_write_concern)
 
 class ReadAttribute(MonguoAttributeFactory):
     def __init__(self):
@@ -51,6 +66,9 @@ class MonguoMeta(type):
                         if isinstance(attr, MonguoAttributeFactory):
                             new_attr = attr.create_attribute(new_class, name)
                             setattr(new_class, name, new_attr)
+                        elif isinstance(attr, types.FunctionType):
+                            new_attr = staticmethod(gen.coroutine(attr))
+                            setattr(new_class, name, new_attr)
         return new_class
 
 class BaseDocument(object):
@@ -62,11 +80,12 @@ class BaseDocument(object):
                             else None)
         db_name = cls.meta['db'] if 'db' in cls.meta else None
         db = Connection.get_db(connection_name, db_name)
+
         collection_name = (cls.meta['collection'] if 'collection' in cls.meta
                             else util.camel_to_underline(cls.__name__))
         collection = db[collection_name]
         return collection
-
+        
 class Document(BaseDocument):
 
     __delegate_class__ = motor.Collection
