@@ -6,8 +6,8 @@ __all__ = ['Field', 'StringField']
 
 
 class Field(object):
-    def __init__(self, required=True, default=None, 
-                unique=False, candidate=None):
+    def __init__(self, required=False, default=None, 
+                        unique=False, candidate=None):
         self.required = required
         self.default = default
         self.unique = unique
@@ -25,7 +25,7 @@ class Field(object):
                 self.validate(item)
 
     def validate(self, value):
-        return value
+        pass
 
 class StringField(Field):
     def __init__(self, **kwargs):
