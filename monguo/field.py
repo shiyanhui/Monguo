@@ -4,10 +4,9 @@ import error
 
 __all__ = ['Field', 'StringField']
 
-
 class Field(object):
     def __init__(self, required=False, default=None, 
-                        unique=False, candidate=None):
+                            unique=False, candidate=None):
         self.required = required
         self.default = default
         self.unique = unique
@@ -40,13 +39,3 @@ class IntegerField(Field):
 
     def validate(self, value):
         return value
-
-
-
-
-
-
-
-
-
-

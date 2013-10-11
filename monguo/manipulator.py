@@ -55,6 +55,12 @@ class MonguoSONManipulator(SONManipulator):
                 if name not in field_list:
                     raise UndefinedFieldError(field=name)
 
+        elif self.method_name == 'save':
+            pass
+
+        elif self.method_name == 'update':
+            pass
+            
         try:
             self.son = _son
         except Exception, e:
