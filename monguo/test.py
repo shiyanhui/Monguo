@@ -33,9 +33,13 @@ class UserDocument(Document):
 @gen.coroutine
 def test():
     Connection.connect('test')
-    # result = yield UserDocument.remove()
-    result = yield UserDocument.insert({'name': 'lime'})
-    # yield UserDocument.insert_user()
+    yield UserDocument.remove()
+    yield UserDocument.insert({'name': 'lime'})
+    result = yield UserDocument.find_one()
+    print result
+    result 
+    result['sex'] = 'female'
+    yield UserDocument.save(result)
     result = yield UserDocument.find_one()
     raise gen.Return(result)
 
