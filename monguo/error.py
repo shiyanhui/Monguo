@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 
 __all__ = ['ConnectionError', 'AssignmentError', 'RequiredError', 
-            'UniqueError', 'CandidateError']
+            'UniqueError', 'CandidateError', 'UndefinedFieldError']
 
-REQUIRED_MESSAGE = 'field %s required!'
-UNIQUE_ERROR     = 'field %s is not unique!'
-CANDIDATE_ERROR  = 'field %s not in candidate!'
+REQUIRED_MESSAGE = 'Field %s required!'
+UNIQUE_ERROR     = 'Field %s is not unique!'
+CANDIDATE_ERROR  = 'Field %s not in candidate!'
+UNDEFINED_ERROR  = 'Undefined field %s!'
 
 class MonguoBaseError(Exception):
     def __init__(self, message=None):
@@ -34,13 +35,17 @@ class RequiredError(FieldCheckError):
 
 class UniqueError(FieldCheckError):
     def __init__(self, field=None, **kwargs):
-        super(RequiredError, self).__init__(UNIQUE_ERROR, 
+        super(UniqueError, self).__init__(UNIQUE_ERROR, 
                                                 field=field, **kwargs)
 
 class CandidateError(FieldCheckError):
     def __init__(self, field=None, **kwargs):
-        super(RequiredError, self).__init__(CANDIDATE_ERROR, 
+        super(CandidateError, self).__init__(CANDIDATE_ERROR, 
                                                 field=field, **kwargs)
 
+class UndefinedFieldError(FieldCheckError):
+    def __init__(self, field=None, **kwargs):
+        super(UndefinedFieldError, self).__init__(UNDEFINED_ERROR, 
+                                                field=field, **kwargs)
 
 

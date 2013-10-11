@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from tornado import gen
+from tornado.concurrent import Future, TracebackFuture
 from tornado.ioloop import IOLoop
 
 from field import Field
@@ -16,50 +17,51 @@ class MonguoSONManipulator(SONManipulator):
         self.son          = son
 
     @gen.coroutine
-    def check_unique(self):
-        result = yield self.collection.find_one(self.condition)
-        if result:
-            raise UniqueError(file=self._field_name)
+    def is_unique(self):
+        raise gen.Return(True)
 
     def transform_incoming(self, son, collection):
         if self.son is None:
             self.son = son
-        
+
         self._collection = collection
 
-        _son = {}
         if self.method_name == 'insert':
+            _son       = {}
+            field_list = []
+
             for name, attr in self.document_cls.__dict__.items():
                 if isinstance(attr, Field):
-                    self._field_name = name
-                    
-                    if attr.required:
-                        if not self.son.has_key(name):
-                            if attr.default is not None:
-                                if attr.unique:
-                                    self._condition = {name: attr.default}
-                                    IOLoop.current().run_sync(
-                                                self.check_unique)
-                                if attr.candidate:
-                                    if attr.default not in attr.candidate:
-                                        raise 
-                                _son[name] = attr.default
-                            else:
-                                raise RequiredError(field=name)
-                        else:
-                            if attr.unique:
-                                self._condition= {name: self.son[name]}
-                                IOLoop.current().run_sync(self.check_unique)
+                    field_list.append(name)
 
-                            attr.validate(self.son[name])
-                            _son[name] = self.son[name]
+                    if (attr.required and not self.son.has_key(name) 
+                                                and attr.default is None):
+                        raise RequiredError(field=name)
 
+                    value = None
+                    if (attr.required and not self.son.has_key(name) 
+                                            and attr.default is not None):
+                        value = attr.default
                     elif self.son.has_key(name):
+                        value = self.son[name]
+
+                    if value is not None:
                         if attr.unique:
-                            self._condition= {name: self.son[name]}
-                            IOLoop.current().run_sync(self.check_unique)
-                        attr.validate(self.son[name])
-                        _son[name] = self.son[name]
+                            self._condition= {name: value}
+                            IOLoop.current().run_sync(self.is_unique)
+                        if attr.candidate:
+                            if value not in attr.candidate:
+                                raise CandidateError(field=name)
+                        attr.validate(value)
+                        _son[name] = value
 
+            for name, attr in self.son.items():
+                if name not in field_list:
+                    raise UndefinedFieldError(field=name)
 
-        return self.son        
+        try:
+            self.son = _son
+        except Exception, e:
+            pass
+
+        return self.son

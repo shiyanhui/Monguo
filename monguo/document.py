@@ -15,8 +15,6 @@ from field import *
 def bound_method(monguo_cls, motor_method, has_write_concern):
     @classmethod
     def method(cls, *args, **kwargs):
-        collection = cls.get_collection()
-
         son = None
         if has_write_concern and motor_method == 'update':
             try:
@@ -27,8 +25,9 @@ def bound_method(monguo_cls, motor_method, has_write_concern):
             if not isinstance(son, dict):
                 raise TypeError('document argument should be a dict type.')
 
+        collection = cls.get_collection()
         collection.database.add_son_manipulator(
-                        MonguoSONManipulator(cls, motor_method, son))
+                    MonguoSONManipulator(cls, motor_method, son))
 
         new_method = getattr(collection, motor_method)
         return new_method(*args, **kwargs)
@@ -75,12 +74,16 @@ class BaseDocument(object):
     meta = {}
 
     @classmethod
-    def get_collection(cls):
+    def get_database(cls):
         connection_name = (cls.meta['connection'] if 'connection' in cls.meta
                             else None)
         db_name = cls.meta['db'] if 'db' in cls.meta else None
         db = Connection.get_db(connection_name, db_name)
+        return db
 
+    @classmethod
+    def get_collection(cls):
+        db = cls.get_database()
         collection_name = (cls.meta['collection'] if 'collection' in cls.meta
                             else util.camel_to_underline(cls.__name__))
         collection = db[collection_name]
