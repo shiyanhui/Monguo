@@ -16,15 +16,9 @@ class MonguoSONManipulator(SONManipulator):
         self.method_name  = method_name
         self.son          = son
 
-    @gen.coroutine
-    def is_unique(self):
-        raise gen.Return(True)
-
     def transform_incoming(self, son, collection):
         if self.son is None:
             self.son = son
-
-        self._collection = collection
 
         if self.method_name == 'insert':
             _son       = {}
@@ -47,8 +41,10 @@ class MonguoSONManipulator(SONManipulator):
 
                     if value is not None:
                         if attr.unique:
-                            self._condition= {name: value}
-                            IOLoop.current().run_sync(self.is_unique)
+                            count = collection.find({name: value}).count()
+                            if count:
+                                raise UniqueError(field=name)
+
                         if attr.candidate:
                             if value not in attr.candidate:
                                 raise CandidateError(field=name)

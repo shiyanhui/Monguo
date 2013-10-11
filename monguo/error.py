@@ -4,7 +4,7 @@ __all__ = ['ConnectionError', 'AssignmentError', 'RequiredError',
             'UniqueError', 'CandidateError', 'UndefinedFieldError']
 
 REQUIRED_MESSAGE = 'Field %s required!'
-UNIQUE_ERROR     = 'Field %s is not unique!'
+UNIQUE_ERROR     = 'Field %s is unique!'
 CANDIDATE_ERROR  = 'Field %s not in candidate!'
 UNDEFINED_ERROR  = 'Undefined field %s!'
 

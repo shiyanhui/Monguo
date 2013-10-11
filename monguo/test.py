@@ -33,7 +33,7 @@ class UserDocument(Document):
 @gen.coroutine
 def test():
     Connection.connect('test')
-    result = yield UserDocument.remove()
+    # result = yield UserDocument.remove()
     result = yield UserDocument.insert({'name': 'lime'})
     # yield UserDocument.insert_user()
     result = yield UserDocument.find_one()
