@@ -30,6 +30,10 @@ def bound_method(monguo_cls, motor_method, has_write_concern):
                     MonguoSONManipulator(cls, motor_method, son))
 
         new_method = getattr(collection, motor_method)
+
+        if has_write_concern and motor_method == 'update':
+            return(new_attr, manipulate=True, *args, **kwargs)
+            
         return new_method(*args, **kwargs)
     return method
 

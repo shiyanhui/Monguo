@@ -16,6 +16,18 @@ class MonguoSONManipulator(SONManipulator):
         self.method_name  = method_name
         self.son          = son
 
+    def __check_value(self, field, collection, name, value):
+        field.validate(value)
+
+        if field.unique:
+            count = collection.find({name: value}).count()
+            if count:
+                raise UniqueError(field=name)
+
+        if field.candidate: 
+            if value not in field.candidate:
+                raise CandidateError(field=name)
+
     def insert(self):
         _son       = {}
         field_list = []
@@ -36,15 +48,7 @@ class MonguoSONManipulator(SONManipulator):
                     value = self.son[name]
 
                 if value is not None:
-                    if attr.unique:
-                        count = collection.find({name: value}).count()
-                        if count:
-                            raise UniqueError(field=name)
-
-                    if attr.candidate:
-                        if value not in attr.candidate:
-                            raise CandidateError(field=name)
-                    attr.validate(value)
+                    self.__check_value(attr, collection, name, value)
                     _son[name] = value
 
         for name, attr in self.son.items():
@@ -63,15 +67,53 @@ class MonguoSONManipulator(SONManipulator):
         return _son
 
     def update(self):
-        if self.son.has_key('$set'):
-            pass
+        field_dict = {}
+        for name, attr in self.document_cls.__dict__.items():
+            if isinstance(attr, Field):
+                field_dict[name] = attr
+
+        operators = ['$inc', '$name', '$setOnInsert', '$set', '$unset', '$', 
+                    '$addToSet', '$pop', '$pullAll', '$pull', '$pushAll',
+                    '$push', '$each', '$slice', '$sort', '$bit', '$isolated']
+
+
+        contain_operator = False
+        for name in self.son:
+            if name in operators:
+                contain_operator = True
+                break
+
+        if not contain_operator:
+            self.insert()
         else:
-            _son = self.insert()
-        return _son
+            if self.son.has_key('$rename'):
+                for name in self.son['$rename']:
+                    raise FieldRenameError(field=name)
+
+            if self.son.has_key('$set'):
+                for name, value in self.son['$set'].items():
+                    if not field_dict.has_key(name):
+                        raise UndefinedFieldError(field=name)
+
+                    self.__check_value(field_dict[name], collection, 
+                                                            name, value)
+
+            if self.son.has_key('$unset'):
+                for name in self.son['$unset']:
+                    if name not in field_dict:
+                        raise UndefinedFieldError(field=name)
+
+                    if field_dict[name].required:
+                        raise FieldDeleteError(field=name)
+
+        return self.original_son
 
     def transform_incoming(self, son, collection):
+        self.original_son = son
+
         if self.son is None:
             self.son = son
+
         try:
             self.son = getattr(self, self.method_name)()
         except AttributeError, e:

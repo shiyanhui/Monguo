@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
 
 __all__ = ['ConnectionError', 'AssignmentError', 'RequiredError', 
-            'UniqueError', 'CandidateError', 'UndefinedFieldError']
+            'UniqueError', 'CandidateError', 'UndefinedFieldError'
+            'FieldDeleteError', 'FieldRenameError']
 
-REQUIRED_MESSAGE = 'Field %s required!'
-UNIQUE_ERROR     = 'Field %s is unique!'
-CANDIDATE_ERROR  = 'Field %s not in candidate!'
-UNDEFINED_ERROR  = 'Undefined field %s!'
+REQUIRED_MESSAGE   = 'Field %s required!'
+UNIQUE_ERROR       = 'Field %s is unique!'
+CANDIDATE_ERROR    = 'Field %s not in candidate!'
+UNDEFINED_ERROR    = 'Undefined field %s!'
+FIELD_DELETE_ERROR = 'Field %s is required, you cant delete it!'
+FIELD_RENAME_ERROR = 'Field %s can\'t be renamed!'
 
 class MonguoBaseError(Exception):
     def __init__(self, message=None):
@@ -48,4 +51,12 @@ class UndefinedFieldError(FieldCheckError):
         super(UndefinedFieldError, self).__init__(UNDEFINED_ERROR, 
                                                 field=field, **kwargs)
 
+class FieldDeleteError(FieldCheckError):
+    def __init__(self, field=None, **kwargs):
+        super(FieldDeleteError, self).__init__(FIELD_DELETE_ERROR, 
+                                                field=field, **kwargs)
 
+class FieldRenameError(FieldCheckError):
+    def __init__(self, field=None, **kwargs):
+        super(FieldRenameError, self).__init__(FIELD_RENAME_ERROR, 
+                                                field=field, **kwargs)
