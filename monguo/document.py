@@ -7,6 +7,7 @@ import types
 import util
 
 from tornado import gen
+from bson.son import SON
 from connection import Connection
 from manipulator import MonguoSONManipulator
 from error import *
@@ -15,25 +16,17 @@ from field import *
 def bound_method(monguo_cls, motor_method, has_write_concern):
     @classmethod
     def method(cls, *args, **kwargs):
-        son = None
-        if has_write_concern and motor_method == 'update':
-            try:
-                son = kwargs.get('document') or args[1]
-            except IndexError, e:
-                raise SyntaxError('lack of document argument')
-
-            if not isinstance(son, dict):
-                raise TypeError('document argument should be a dict type.')
-
+        
+        options = {'args': args, 'kwargs': kwargs}
         collection = cls.get_collection()
         collection.database.add_son_manipulator(
-                    MonguoSONManipulator(cls, motor_method, son))
+                    MonguoSONManipulator(cls, motor_method, **options))
 
         new_method = getattr(collection, motor_method)
 
         if has_write_concern and motor_method == 'update':
-            return(new_attr, manipulate=True, *args, **kwargs)
-            
+            kwargs.update({'manipulate': True})
+            return new_method(*args, **kwargs)
         return new_method(*args, **kwargs)
     return method
 
@@ -66,9 +59,14 @@ class MonguoMeta(type):
             if delegate_class == motor.Collection:
                 for base in reversed(inspect.getmro(new_class)):
                     for name, attr in base.__dict__.items():
-                        if isinstance(attr, MonguoAttributeFactory):
+                        if isinstance(attr, Field):
+                            if name.find('.') != -1 or name.find('$') != -1:
+                                raise FieldNameError(field=name)
+
+                        elif isinstance(attr, MonguoAttributeFactory):
                             new_attr = attr.create_attribute(new_class, name)
                             setattr(new_class, name, new_attr)
+
                         elif isinstance(attr, types.FunctionType):
                             new_attr = staticmethod(gen.coroutine(attr))
                             setattr(new_class, name, new_attr)

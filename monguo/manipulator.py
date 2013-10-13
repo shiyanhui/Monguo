@@ -11,16 +11,16 @@ from pymongo.son_manipulator import SONManipulator
 __all__ = ['MonguoSONManipulator']
 
 class MonguoSONManipulator(SONManipulator):
-    def __init__(self, document_cls, method_name, son=None):
+    def __init__(self, document_cls, method_name, **options):
         self.document_cls = document_cls
         self.method_name  = method_name
-        self.son          = son
+        self.options = options
 
-    def __check_value(self, field, collection, name, value):
+    def __check_value(self, field, name, value):
         field.validate(value)
 
         if field.unique:
-            count = collection.find({name: value}).count()
+            count = self.collection.find({name: value}).count()
             if count:
                 raise UniqueError(field=name)
 
@@ -48,7 +48,7 @@ class MonguoSONManipulator(SONManipulator):
                     value = self.son[name]
 
                 if value is not None:
-                    self.__check_value(attr, collection, name, value)
+                    self.__check_value(attr, name, value)
                     _son[name] = value
 
         for name, attr in self.son.items():
@@ -76,27 +76,40 @@ class MonguoSONManipulator(SONManipulator):
                     '$addToSet', '$pop', '$pullAll', '$pull', '$pushAll',
                     '$push', '$each', '$slice', '$sort', '$bit', '$isolated']
 
+        try:
+            spec = self.options['args'][0]
+        except IndexError, e:
+            try:
+                spec = self.options['kwargs']['spec']
+            except KeyError, e:
+                raise SyntaxError('lack of spec argument!')
 
-        contain_operator = False
-        for name in self.son:
-            if name in operators:
-                contain_operator = True
-                break
+        if not isinstance(spec, dict) and not isinstance(spec, SON):
+            raise TypeError('spec argument should be a dict \
+                                        type or SON instance.')
 
-        if not contain_operator:
-            self.insert()
-        else:
+        try:
+            upsert = self.options['args'][2]
+        except IndexError, e:
+            upsert = self.options['kwargs'].get('upsert', False)
+
+        if not isinstance(upsert, bool):
+            raise TypeError('upsert should be bool type.')
+
+        if not upsert:
+            contain_operator = False
+            for name in self.son:
+                if name in operators:
+                    contain_operator = True
+                    break
+
+            if not contain_operator:
+                _son = self.insert()
+                return _son
+
             if self.son.has_key('$rename'):
                 for name in self.son['$rename']:
                     raise FieldRenameError(field=name)
-
-            if self.son.has_key('$set'):
-                for name, value in self.son['$set'].items():
-                    if not field_dict.has_key(name):
-                        raise UndefinedFieldError(field=name)
-
-                    self.__check_value(field_dict[name], collection, 
-                                                            name, value)
 
             if self.son.has_key('$unset'):
                 for name in self.son['$unset']:
@@ -105,18 +118,22 @@ class MonguoSONManipulator(SONManipulator):
 
                     if field_dict[name].required:
                         raise FieldDeleteError(field=name)
+                        
+            if self.son.has_key('$set'):
+                for name, value in self.son['$set'].items():
+                    if not field_dict.has_key(name):
+                        raise UndefinedFieldError(field=name)
 
-        return self.original_son
+                    self.__check_value(field_dict[name], name, value)
+        return self.son
 
     def transform_incoming(self, son, collection):
-        self.original_son = son
-
-        if self.son is None:
-            self.son = son
+        self.collection = collection
+        self.son = son
 
         try:
-            self.son = getattr(self, self.method_name)()
+            _son = getattr(self, self.method_name)()
         except AttributeError, e:
             pass
 
-        return self.son
+        return _son

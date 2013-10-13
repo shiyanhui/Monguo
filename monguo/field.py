@@ -24,7 +24,7 @@ class Field(object):
                 self.validate(item)
 
     def validate(self, value):
-        pass
+        return value
 
 class StringField(Field):
     def __init__(self, **kwargs):
@@ -38,4 +38,18 @@ class IntegerField(Field):
         super(StringField, self).__init__(**kwargs)
 
     def validate(self, value):
+        return value
+
+class EmbeddedDocumentField(Field):
+    def __init__(self, **kwargs):
+        super(EmbeddedDocumentField, self).__init__(**kwargs)
+
+    def validate(self, value):
+        return value
+
+class ListField(Field):
+    def __init__(self, **kwargs):
+        super(ListField, self).__init__(**kwargs)
+    
+    def validate(self, value):        
         return value
