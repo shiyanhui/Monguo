@@ -166,12 +166,14 @@ class MonguoSONManipulator(SONManipulator):
                                     if not isinstance(
                                                 attr, EmbeddedDocumentField):
                                         raise TypeError("'%s' should be EmbeddedDocumentField type." % name)
-                                    current_document_cls = attr.__class__
+                                    current_document_cls = attr.embedded_doc
                                 else:
                                     if not isinstance(attr, ListField):
                                         raise TypeError('%s should be\
                                                 ListField type.' % name)
                                     attr.validate(value)
+                            else:
+                                attr.validate(value)
 
                     if not self.document_cls.fields_dict().has_key(name):
                         raise UndefinedFieldError(field=name)
