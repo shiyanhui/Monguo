@@ -4,6 +4,7 @@ __all__ = ['ConnectionError', 'AssignmentError', 'RequiredError',
             'UniqueError', 'CandidateError', 'UndefinedFieldError',
             'FieldDeleteError', 'FieldRenameError', 'FieldNameError']
 
+ASSIGNMENT_ERROR   = '%s cant\'t be assgined!'
 REQUIRED_MESSAGE   = 'Field %s required!'
 UNIQUE_ERROR       = 'Field %s is unique!'
 CANDIDATE_ERROR    = 'Field %s not in candidate!'
@@ -22,15 +23,17 @@ class MonguoBaseError(Exception):
 class ConnectionError(MonguoBaseError):
     pass
 
-class AssignmentError(MonguoBaseError):
-    pass
-
 class FieldCheckError(MonguoBaseError):
     def __init__(self, base_message, field=None, **kwargs):
         super(FieldCheckError, self).__init__(**kwargs)
 
         if self.message is None:
             self.message = base_message % str('' if field is None else field)
+
+class AssignmentError(FieldCheckError):
+    def __init__(self, field=None, **kwargs):
+        super(AssignmentError, self).__init__(ASSIGNMENT_ERROR, 
+                                                field=field, **kwargs)
 
 class RequiredError(FieldCheckError):
     def __init__(self, field=None, **kwargs):
