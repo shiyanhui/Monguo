@@ -6,7 +6,7 @@ from tornado import gen
 from tornado.concurrent import Future, TracebackFuture
 from tornado.ioloop import IOLoop
 
-from field import Field
+from field import *
 from error import *
 from pymongo.son_manipulator import SONManipulator
 
@@ -30,20 +30,6 @@ class MonguoSONManipulator(SONManipulator):
             if value not in field.candidate:
                 raise CandidateError(field=name)
 
-    @property
-    def document_fields(self):
-        field_list = {}
-
-        for name, attr in self.document_cls.__dict__.items():
-            if isinstance(attr, Field):
-                field_list[name] = attr
-
-        return field_list
-
-    @document_fields.setter
-    def document_fields(self, value):
-        raise AssignmentError(field='document_fields')
-    
     def insert(self):
         _son = {}
 
@@ -65,7 +51,7 @@ class MonguoSONManipulator(SONManipulator):
                     _son[name] = value
 
         for name, attr in self.son.items():
-            if name not in self.document_fields:
+            if name not in self.document_cls.fields_dict():
                 raise UndefinedFieldError(field=name)
         return _son
 
@@ -82,6 +68,8 @@ class MonguoSONManipulator(SONManipulator):
     def update(self):
 
         def __check_name_in_set_fields(name):
+            '''Check whether the field name in '$set' is validated.'''
+
             regex = re.compile(r'^[_a-zA-Z][.$_a-zA-Z0-9]+[_$a-zA-Z0-9]$')
             if not regex.match(name):
                 raise NameError('NameError in $set field %s' % name)
@@ -91,9 +79,23 @@ class MonguoSONManipulator(SONManipulator):
                     if name[index-1] != '.':
                         raise NameError("before '$' should be '.' \
                                                         in field of '$set'!")
-                    if index != len(name) - 1 and name[index+1] != '.':
+                    if index != len(name) - 1 and name[index + 1] != '.':
                         raise NameError("after '$' should be '.' \
                                                         in field of '$set'!")
+            name_list = name.split('.')
+            
+            pre_name = '$'
+            for name in name_list:
+                if name == pre_name == '$': 
+                    raise NameError('NameError in %s' % name)
+                pre_name = name
+
+        def __check_document(document):
+            for name, value in document:
+                if not isinstance(value, dict):                   
+                    pass
+                else:
+                    __check_document(value)
 
         operators = ['$inc', '$name', '$setOnInsert', '$set', '$unset', '$', 
                     '$addToSet', '$pop', '$pullAll', '$pull', '$pushAll',
@@ -136,23 +138,47 @@ class MonguoSONManipulator(SONManipulator):
 
             if self.son.has_key('$unset'):
                 for name in self.son['$unset']:
-                    if name not in self.document_fields:
+                    if name not in self.document_cls.fields_dict():
                         raise UndefinedFieldError(field=name)
 
-                    if self.document_fields[name].required:
+                    if self.document_cls.fields_dict()[name].required:
                         raise FieldDeleteError(field=name)
                         
             if self.son.has_key('$set'):
                 for name, value in self.son['$set'].items():
-
+                    # Is the field name in self.son['$set'] is right? 
                     __check_name_in_set_fields(name)
 
+                    current_document_cls = self.document_cls
                     name_list = name.split('.')
-                    
-                    if not self.document_fields.has_key(name):
+                    for index, name in enumerate(name_list):
+
+                        fields_dict = current_document_cls.fields_dict()
+                        attr = fields_dict[name]
+
+                        if name not in fields_dict:
+                            raise UndefinedFieldError(field=name)
+
+                        if name != '$':
+                            if index != len(name_list) - 1:
+                                if name_list[index + 1] != '$':
+                                    if not isinstance(
+                                                attr, EmbeddedDocumentField):
+                                        raise TypeError('%s should be\
+                                                EmbeddedDocumentField type.' % 
+                                                name)
+                                    current_document_cls = attr.__class__
+                                else:
+                                    if not isinstance(attr, ListField):
+                                        raise TypeError('%s should be\
+                                                ListField type.' % name)
+                                    attr.validate(value)
+
+                    if not self.document_cls.fields_dict().has_key(name):
                         raise UndefinedFieldError(field=name)
 
-                    self.__check_value(self.document_fields[name], name, value)
+                    self.__check_value(self.document_cls.fields_dict()[name], 
+                                                                   name, value)
         return self.son
 
     def transform_incoming(self, son, collection):

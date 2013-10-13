@@ -2,7 +2,8 @@
 
 import error
 
-__all__ = ['Field', 'StringField']
+__all__ = ['Field', 'StringField', 'IntegerField', 'EmbeddedDocumentField', 
+            'ListField']
 
 class Field(object):
     def __init__(self, required=False, default=None, 
