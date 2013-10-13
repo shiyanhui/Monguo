@@ -78,9 +78,9 @@ class BaseDocument(object):
     @classmethod
     def fields_dict(cls):
         fields = {}
-        for name, attr in cls.__dict__().items():
+        for name, attr in cls.__dict__.items():
             if isinstance(attr, Field):
-                fields.update({name, attr}))
+                fields.update({name: attr})
         return fields
 
     @classmethod

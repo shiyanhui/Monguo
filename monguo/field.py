@@ -36,13 +36,18 @@ class StringField(Field):
 
 class IntegerField(Field):
     def __init__(self, **kwargs):
-        super(StringField, self).__init__(**kwargs)
+        super(IntegerField, self).__init__(**kwargs)
 
     def validate(self, value):
         return value
 
 class EmbeddedDocumentField(Field):
-    def __init__(self, **kwargs):
+    def __init__(self, embedded_doc, **kwargs):
+        from document import Document
+        if not issubclass(embedded_doc, Document):
+            raise TypeError("Argument 'embedded_doc' should be Document type.")
+
+        self.embedded_doc = embedded_doc
         super(EmbeddedDocumentField, self).__init__(**kwargs)
 
     def validate(self, value):

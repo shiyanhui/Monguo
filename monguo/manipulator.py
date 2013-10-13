@@ -146,6 +146,7 @@ class MonguoSONManipulator(SONManipulator):
                         
             if self.son.has_key('$set'):
                 for name, value in self.son['$set'].items():
+
                     # Is the field name in self.son['$set'] is right? 
                     __check_name_in_set_fields(name)
 
@@ -154,19 +155,17 @@ class MonguoSONManipulator(SONManipulator):
                     for index, name in enumerate(name_list):
 
                         fields_dict = current_document_cls.fields_dict()
-                        attr = fields_dict[name]
-
                         if name not in fields_dict:
                             raise UndefinedFieldError(field=name)
+                        
+                        attr = fields_dict[name]
 
                         if name != '$':
                             if index != len(name_list) - 1:
                                 if name_list[index + 1] != '$':
                                     if not isinstance(
                                                 attr, EmbeddedDocumentField):
-                                        raise TypeError('%s should be\
-                                                EmbeddedDocumentField type.' % 
-                                                name)
+                                        raise TypeError("'%s' should be EmbeddedDocumentField type." % name)
                                     current_document_cls = attr.__class__
                                 else:
                                     if not isinstance(attr, ListField):
