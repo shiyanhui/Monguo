@@ -49,15 +49,17 @@ class GenericDictField(Field):
         return value
 
 class DictField(Field):
-    def __init__(self, embedded_doc, **kwargs):
+    def __init__(self, document, **kwargs):
         from document import Document
-        if not issubclass(embedded_doc, Document):
+        if not issubclass(document, Document):
             raise TypeError("Argument 'embedded_doc' should be Document type.")
 
-        self.embedded_doc = embedded_doc
-        super(EmbeddedDocumentField, self).__init__(**kwargs)
+        self.document = document
+        super(DictField, self).__init__(**kwargs)
 
     def validate(self, value):
+        if not isinstance(value, dict):
+            raise TypeError('not dict')
         return value
 
 EmbeddedDocumentField = DictField
@@ -70,7 +72,8 @@ class GenericListField(Field):
         return value
 
 class ListField(Field):
-    def __init__(self, filed, **kwargs):
+    def __init__(self, field, **kwargs):
+        self.field = field
         super(ListField, self).__init__(**kwargs)
     
     def validate(self, value):        

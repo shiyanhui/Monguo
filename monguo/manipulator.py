@@ -71,11 +71,12 @@ class MonguoSONManipulator(SONManipulator):
             '''Check whether the field name in '$set' is validated.'''
 
             name_list = key.split('.')
+            print name_list
             for name in name_list:
                 if not (util.legal_variable_name(name) or name == '$'):
                     raise NameError('%s is an illegal key!', key)
 
-            if name_list['$'].count() > 1:
+            if name_list.count('$') > 1:
                 raise NameError('%s is an illegal key!', key)
 
             if name_list[0] == '$':
@@ -139,9 +140,9 @@ class MonguoSONManipulator(SONManipulator):
                         
             if self.son.has_key('$set'):
                 for name, value in self.son['$set'].items():
-
                     # Is the field name in self.son['$set'] is right? 
                     name_list = check_key_in_set_fields(name)
+                    name_without_dollar = '.'.join([name for name in name_list if name != '$'])
                     current_document_cls = self.document_cls
 
                     for index, name in enumerate(name_list):
@@ -154,28 +155,36 @@ class MonguoSONManipulator(SONManipulator):
                         if name != '$':
                             if index != len(name_list) - 1:
                                 if name_list[index + 1] != '$':
-                                    if not isinstance(
-                                                attr, EmbeddedDocumentField):
-                                        raise TypeError("'%s' should be EmbeddedDocumentField type." % name)
-                                    current_document_cls = attr.embedded_doc
+                                    if isinstance(attr, EmbeddedDocumentField):
+                                        current_document_cls = attr.document
+                                    elif isinstance(attr, GenericDictField):
+                                        break
+                                    else:
+                                        raise TypeError("'%s' isn't EmbeddedDocumentField or GenericDictField type." % name)
                                 else:
-                                    if not isinstance(attr, ListField) and not 
-                                            isinstance(attr, GenericListField):
-                                        raise TypeError('%s should be\
-                                                ListField type.' % name)
+                                    if isinstance(attr, ListField):
+                                        pass
+                                    elif isinstance(attr, GenericListField):
+                                        break
+                                    else:
+                                        raise TypeError("%s isn't ListField or GenericListField type." % name)
                             else:
-                                attr.validate(value)
+                                self.check_value(attr, name_without_dollar, value)
                         else:
                             if index != len(name_list) - 1:
-                                if 
+                                pre_attr = fields_dict[name_list[index - 1]]
+                                if isinstance(pre_attr, ListField):
+                                    if isinstance(pre_attr.field, DictField):
+                                        current_document_cls = pre_attr.field
+                                    elif isinstance(pre_attr.field, GenericDictField):
+                                        break
+                                    else:
+                                        raise TypeError('item in %s must be GenericDictField or DictField type.' % name)
+                                else:
+                                    break
                             else:
-                                attr.validate(value)
+                                self.check_value(attr, name_without_dollar, value)
 
-                    if not self.document_cls.fields_dict().has_key(name):
-                        raise UndefinedFieldError(field=name)
-
-                    self.check_value(self.document_cls.fields_dict()[name], 
-                                                                   name, value)
         return self.son
 
     def transform_incoming(self, son, collection):
