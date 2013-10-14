@@ -3,7 +3,7 @@
 import error
 
 __all__ = ['Field', 'StringField', 'IntegerField', 'EmbeddedDocumentField', 
-            'ListField']
+            'GenericDictField', 'DictField', 'GenericListField', 'ListField']
 
 class Field(object):
     def __init__(self, required=False, default=None, 
@@ -41,7 +41,14 @@ class IntegerField(Field):
     def validate(self, value):
         return value
 
-class EmbeddedDocumentField(Field):
+class GenericDictField(Field):
+    def __init__(self, **kwargs):
+        super(GenericDictField, self).__init__(**kwargs)
+
+    def validate(self, value):
+        return value
+
+class DictField(Field):
     def __init__(self, embedded_doc, **kwargs):
         from document import Document
         if not issubclass(embedded_doc, Document):
@@ -53,8 +60,17 @@ class EmbeddedDocumentField(Field):
     def validate(self, value):
         return value
 
-class ListField(Field):
+EmbeddedDocumentField = DictField
+
+class GenericListField(Field):
     def __init__(self, **kwargs):
+        super(GenericListField, self).__init__(**kwargs)
+
+    def validate(self, value):
+        return value
+
+class ListField(Field):
+    def __init__(self, filed, **kwargs):
         super(ListField, self).__init__(**kwargs)
     
     def validate(self, value):        

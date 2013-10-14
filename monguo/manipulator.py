@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import re
+import util
 
 from tornado import gen
 from tornado.concurrent import Future, TracebackFuture
@@ -18,7 +19,7 @@ class MonguoSONManipulator(SONManipulator):
         self.method_name  = method_name
         self.options = options
 
-    def __check_value(self, field, name, value):
+    def check_value(self, field, name, value):
         field.validate(value)
 
         if field.unique:
@@ -47,7 +48,7 @@ class MonguoSONManipulator(SONManipulator):
                     value = self.son[name]
 
                 if value is not None:
-                    self.__check_value(attr, name, value)
+                    self.check_value(attr, name, value)
                     _son[name] = value
 
         for name, attr in self.son.items():
@@ -66,31 +67,23 @@ class MonguoSONManipulator(SONManipulator):
         return _son
 
     def update(self):
-
-        def __check_name_in_set_fields(name):
+        def check_key_in_set_fields(key):
             '''Check whether the field name in '$set' is validated.'''
 
-            regex = re.compile(r'^[_a-zA-Z][.$_a-zA-Z0-9]+[_$a-zA-Z0-9]$')
-            if not regex.match(name):
-                raise NameError('NameError in $set field %s' % name)
-            
-            for index, char in enumerate(name):
-                if char == '$':
-                    if name[index-1] != '.':
-                        raise NameError("before '$' should be '.' \
-                                                        in field of '$set'!")
-                    if index != len(name) - 1 and name[index + 1] != '.':
-                        raise NameError("after '$' should be '.' \
-                                                        in field of '$set'!")
-            name_list = name.split('.')
-            
-            pre_name = '$'
+            name_list = key.split('.')
             for name in name_list:
-                if name == pre_name == '$': 
-                    raise NameError('NameError in %s' % name)
-                pre_name = name
+                if not (util.legal_variable_name(name) or name == '$'):
+                    raise NameError('%s is an illegal key!', key)
 
-        def __check_document(document):
+            if name_list['$'].count() > 1:
+                raise NameError('%s is an illegal key!', key)
+
+            if name_list[0] == '$':
+                raise NameError('%s is an illegal key!', key)
+
+            return name_list
+
+        def check_document(document):
             for name, value in document:
                 if not isinstance(value, dict):                   
                     pass
@@ -148,12 +141,10 @@ class MonguoSONManipulator(SONManipulator):
                 for name, value in self.son['$set'].items():
 
                     # Is the field name in self.son['$set'] is right? 
-                    __check_name_in_set_fields(name)
-
+                    name_list = check_key_in_set_fields(name)
                     current_document_cls = self.document_cls
-                    name_list = name.split('.')
-                    for index, name in enumerate(name_list):
 
+                    for index, name in enumerate(name_list):
                         fields_dict = current_document_cls.fields_dict()
                         if name not in fields_dict:
                             raise UndefinedFieldError(field=name)
@@ -168,17 +159,22 @@ class MonguoSONManipulator(SONManipulator):
                                         raise TypeError("'%s' should be EmbeddedDocumentField type." % name)
                                     current_document_cls = attr.embedded_doc
                                 else:
-                                    if not isinstance(attr, ListField):
+                                    if not isinstance(attr, ListField) and not 
+                                            isinstance(attr, GenericListField):
                                         raise TypeError('%s should be\
                                                 ListField type.' % name)
-                                    attr.validate(value)
+                            else:
+                                attr.validate(value)
+                        else:
+                            if index != len(name_list) - 1:
+                                if 
                             else:
                                 attr.validate(value)
 
                     if not self.document_cls.fields_dict().has_key(name):
                         raise UndefinedFieldError(field=name)
 
-                    self.__check_value(self.document_cls.fields_dict()[name], 
+                    self.check_value(self.document_cls.fields_dict()[name], 
                                                                    name, value)
         return self.son
 

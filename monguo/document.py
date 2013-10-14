@@ -72,35 +72,8 @@ class MonguoMeta(type):
                             setattr(new_class, name, new_attr)
         return new_class
 
+
 class BaseDocument(object):
-    meta = {}
-
-    @classmethod
-    def fields_dict(cls):
-        fields = {}
-        for name, attr in cls.__dict__.items():
-            if isinstance(attr, Field):
-                fields.update({name: attr})
-        return fields
-
-    @classmethod
-    def get_database(cls):
-        connection_name = (cls.meta['connection'] if 'connection' in cls.meta
-                            else None)
-        db_name = cls.meta['db'] if 'db' in cls.meta else None
-        db = Connection.get_db(connection_name, db_name)
-        return db
-
-    @classmethod
-    def get_collection(cls):
-        db = cls.get_database()
-        collection_name = (cls.meta['collection'] if 'collection' in cls.meta
-                            else util.camel_to_underline(cls.__name__))
-        collection = db[collection_name]
-        return collection
-        
-class Document(BaseDocument):
-
     __delegate_class__ = motor.Collection
     __metaclass__      = MonguoMeta
 
@@ -128,3 +101,35 @@ class Document(BaseDocument):
     aggregate         = ReadAttribute()
     uuid_subtype      = motor.ReadWriteProperty()
     full_name         = motor.ReadOnlyProperty()
+
+class EmbeddedDocument(BaseDocument):
+    pass  
+
+class Document(BaseDocument):
+    meta = {}
+
+    @classmethod
+    def fields_dict(cls):
+        fields = {}
+        for name, attr in cls.__dict__.items():
+            if isinstance(attr, Field):
+                fields.update({name: attr})
+        return fields
+
+    @classmethod
+    def get_database(cls):
+        connection_name = (cls.meta['connection'] if 'connection' in cls.meta
+                            else None)
+        db_name = cls.meta['db'] if 'db' in cls.meta else None
+        db = Connection.get_db(connection_name, db_name)
+        return db
+
+    @classmethod
+    def get_collection(cls):
+        db = cls.get_database()
+        collection_name = (cls.meta['collection'] if 'collection' in cls.meta
+                            else util.camel_to_underline(cls.__name__))
+        collection = db[collection_name]
+        return collection
+
+      
