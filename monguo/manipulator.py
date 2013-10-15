@@ -71,16 +71,21 @@ class MonguoSONManipulator(SONManipulator):
             '''Check whether the field name in '$set' is validated.'''
 
             name_list = key.split('.')
-            print name_list
+            name_error = NameError('%s is an illegal key!', key)
             for name in name_list:
-                if not (util.legal_variable_name(name) or name == '$'):
-                    raise NameError('%s is an illegal key!', key)
+                if not (util.legal_variable_name(name) or name.isdigit() or 
+                        name == '$'):
+                    raise name_error
 
             if name_list.count('$') > 1:
-                raise NameError('%s is an illegal key!', key)
+                raise name_error
 
-            if name_list[0] == '$':
-                raise NameError('%s is an illegal key!', key)
+            if not util.legal_variable_name(name_list[0]):
+                raise name_error
+
+            if (name_list.count('$') == 1 and 
+                    name_list[name_list.index('$') - 1].isdigit()):
+                raise name_error
 
             return name_list
 
@@ -152,7 +157,27 @@ class MonguoSONManipulator(SONManipulator):
                         
                         attr = fields_dict[name]
 
-                        if name != '$':
+                        if name == '$' or name.isdigit():
+                            if index != len(name_list) - 1:
+                                next_name = name_list[index + 1]
+
+                                if next_name.isdigit():
+                                    if isinstance(current_list_field.field, ListField):
+                                        current_list_field = current_list_field.field
+                                    elif isinstance(current_list_field, GenericListField):
+                                        break
+                                    else:
+                                        raise TypeError('item in %s should be GenericListField or ListField type.' % name)
+                                else:
+                                    if isinstance(current_list_field.field, DictField):
+                                        current_document_cls = pre_attr.field
+                                    elif isinstance(current_list_field.field, GenericDictField):
+                                        break
+                                    else:
+                                        raise TypeError('item in %s should be GenericDictField or DictField type.' % name)
+                            else:
+                                self.check_value(attr, name_without_dollar, value)
+                        else:
                             if index != len(name_list) - 1:
                                 if name_list[index + 1] != '$':
                                     if isinstance(attr, EmbeddedDocumentField):
@@ -163,27 +188,35 @@ class MonguoSONManipulator(SONManipulator):
                                         raise TypeError("'%s' isn't EmbeddedDocumentField or GenericDictField type." % name)
                                 else:
                                     if isinstance(attr, ListField):
-                                        pass
+                                        current_list_field = attr
                                     elif isinstance(attr, GenericListField):
                                         break
                                     else:
                                         raise TypeError("%s isn't ListField or GenericListField type." % name)
                             else:
                                 self.check_value(attr, name_without_dollar, value)
-                        else:
-                            if index != len(name_list) - 1:
-                                pre_attr = fields_dict[name_list[index - 1]]
-                                if isinstance(pre_attr, ListField):
-                                    if isinstance(pre_attr.field, DictField):
-                                        current_document_cls = pre_attr.field
-                                    elif isinstance(pre_attr.field, GenericDictField):
-                                        break
-                                    else:
-                                        raise TypeError('item in %s must be GenericDictField or DictField type.' % name)
-                                else:
-                                    break
-                            else:
-                                self.check_value(attr, name_without_dollar, value)
+
+            if self.son.has_key('$inc'):
+                pass
+
+            if self.son.has_key('$addToSet'):
+                pass
+
+            if self.son.has_key('$pop'):
+                pass
+
+            if self.son.has_key('$pullAll'):
+                pass
+
+            if self.son.has_key('$pull'):
+                pass
+
+            if self.son.has_key('$pushAll'):
+                pass
+
+            if self.son.has_key('$push'):
+                pass
+
 
         return self.son
 
