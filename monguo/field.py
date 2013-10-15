@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import error
+import util
 
 __all__ = ['Field', 'StringField', 'IntegerField', 'EmbeddedDocumentField', 
             'GenericDictField', 'DictField', 'GenericListField', 'ListField']
@@ -34,7 +35,26 @@ class StringField(Field):
     def validate(self, value):
         return value
 
-class IntegerField(Field):
+class NumberField(Field):
+    def __init__(self, **kwargs):
+        super(NumberField, self).__init__(**kwargs)
+
+    def validate(value):
+        try:
+            value = float(value)
+        except:
+            raise ValueError('value of NumberField must be a number.')
+
+        return value
+
+class IntegerField(NumberField):
+    def __init__(self, **kwargs):
+        super(IntegerField, self).__init__(**kwargs)
+
+    def validate(self, value):
+        return value
+
+class FloatField(NumberField):
     def __init__(self, **kwargs):
         super(IntegerField, self).__init__(**kwargs)
 

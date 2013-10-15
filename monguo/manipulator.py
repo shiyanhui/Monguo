@@ -196,7 +196,65 @@ class MonguoSONManipulator(SONManipulator):
                                 self.check_value(current_attr, name_without_dollar, value)
 
             if self.son.has_key('$inc'):
-                pass
+                for name, value in self.son['$inc'].items():
+                    if not util.isnum(value):
+                        raise ValueError('value in $inc must be number.')
+
+                    # Is the field name in self.son['$set'] is right? 
+                    name_list = check_key_in_set_fields(name)
+                    name_without_dollar = '.'.join([name for name in name_list if name != '$'])
+
+                    fields_dict = self.document_cls.fields_dict()
+
+                    if name_list[0] not in fields_dict:
+                        raise UndefinedFieldError(field=name)
+                    
+                    current_attr = fields_dict[name_list[0]]
+                    for index, name in enumerate(name_list):
+                        if name == '$' or name.isdigit():
+                            if index != len(name_list) - 1:
+                                next_name = name_list[index + 1]
+
+                                if next_name.isdigit():
+                                    if isinstance(current_attr.field, ListField):
+                                        current_attr = current_attr.field
+                                    elif isinstance(current_attr, GenericListField):
+                                        break
+                                    else:
+                                        raise TypeError('item in %s should be GenericListField or ListField type.' % name)
+                                else:
+                                    if isinstance(current_attr.field, DictField):
+                                        current_attr = current_attr.field
+                                    elif isinstance(current_attr.field, GenericDictField):
+                                        break
+                                    else:
+                                        raise TypeError('item in %s should be GenericDictField or DictField type.' % name)
+                            else:
+                                if not isinstance(current_attr, NumberField):
+                                    raise ValueError('The field assigned to is not an instance of NumberField.')
+                                    
+                                self.check_value(current_attr, name_without_dollar, value)
+                        else:
+                            if index != len(name_list) - 1:
+                                if util.legal_variable_name(name_list[index + 1]):
+                                    if isinstance(current_attr, EmbeddedDocumentField):
+                                        current_attr = current_attr.document
+                                    elif isinstance(current_attr, GenericDictField):
+                                        break
+                                    else:
+                                        raise TypeError("'%s' isn't EmbeddedDocumentField or GenericDictField type." % name)
+                                else:
+                                    if isinstance(current_attr, ListField):
+                                        current_attr = current_attr.field
+                                    elif isinstance(current_attr, GenericListField):
+                                        break
+                                    else:
+                                        raise TypeError("%s isn't ListField or GenericListField type." % name)
+                            else:
+                                if not isinstance(current_attr, NumberField):
+                                    raise ValueError('The field assigned to is not an instance of NumberField.')
+
+                                self.check_value(current_attr, name_without_dollar, value)
 
             if self.son.has_key('$addToSet'):
                 pass
@@ -215,7 +273,6 @@ class MonguoSONManipulator(SONManipulator):
 
             if self.son.has_key('$push'):
                 pass
-
 
         return self.son
 

@@ -15,3 +15,11 @@ def legal_variable_name(name):
     if regex.match(str(name)):
         return True
     return False
+
+def isnum(value):
+    try:
+        float(value)
+    except:
+        return False
+    else:
+        return True
