@@ -148,53 +148,52 @@ class MonguoSONManipulator(SONManipulator):
                     # Is the field name in self.son['$set'] is right? 
                     name_list = check_key_in_set_fields(name)
                     name_without_dollar = '.'.join([name for name in name_list if name != '$'])
-                    current_document_cls = self.document_cls
 
+                    fields_dict = self.document_cls.fields_dict()
+
+                    if name_list[0] not in fields_dict:
+                        raise UndefinedFieldError(field=name)
+                    
+                    current_attr = fields_dict[name_list[0]]
                     for index, name in enumerate(name_list):
-                        fields_dict = current_document_cls.fields_dict()
-                        if name not in fields_dict:
-                            raise UndefinedFieldError(field=name)
-                        
-                        attr = fields_dict[name]
-
                         if name == '$' or name.isdigit():
                             if index != len(name_list) - 1:
                                 next_name = name_list[index + 1]
 
                                 if next_name.isdigit():
-                                    if isinstance(current_list_field.field, ListField):
-                                        current_list_field = current_list_field.field
-                                    elif isinstance(current_list_field, GenericListField):
+                                    if isinstance(current_attr.field, ListField):
+                                        current_attr = current_attr.field
+                                    elif isinstance(current_attr, GenericListField):
                                         break
                                     else:
                                         raise TypeError('item in %s should be GenericListField or ListField type.' % name)
                                 else:
-                                    if isinstance(current_list_field.field, DictField):
-                                        current_document_cls = pre_attr.field
-                                    elif isinstance(current_list_field.field, GenericDictField):
+                                    if isinstance(current_attr.field, DictField):
+                                        current_attr = current_attr.field
+                                    elif isinstance(current_attr.field, GenericDictField):
                                         break
                                     else:
                                         raise TypeError('item in %s should be GenericDictField or DictField type.' % name)
                             else:
-                                self.check_value(attr, name_without_dollar, value)
+                                self.check_value(current_attr, name_without_dollar, value)
                         else:
                             if index != len(name_list) - 1:
-                                if name_list[index + 1] != '$':
-                                    if isinstance(attr, EmbeddedDocumentField):
-                                        current_document_cls = attr.document
-                                    elif isinstance(attr, GenericDictField):
+                                if util.legal_variable_name(name_list[index + 1]):
+                                    if isinstance(current_attr, EmbeddedDocumentField):
+                                        current_attr = current_attr.document
+                                    elif isinstance(current_attr, GenericDictField):
                                         break
                                     else:
                                         raise TypeError("'%s' isn't EmbeddedDocumentField or GenericDictField type." % name)
                                 else:
-                                    if isinstance(attr, ListField):
-                                        current_list_field = attr
-                                    elif isinstance(attr, GenericListField):
+                                    if isinstance(current_attr, ListField):
+                                        current_attr = current_attr.field
+                                    elif isinstance(current_attr, GenericListField):
                                         break
                                     else:
                                         raise TypeError("%s isn't ListField or GenericListField type." % name)
                             else:
-                                self.check_value(attr, name_without_dollar, value)
+                                self.check_value(current_attr, name_without_dollar, value)
 
             if self.son.has_key('$inc'):
                 pass
