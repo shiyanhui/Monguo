@@ -3,8 +3,9 @@
 import error
 import util
 
-__all__ = ['Field', 'StringField', 'IntegerField', 'EmbeddedDocumentField', 
-            'GenericDictField', 'DictField', 'GenericListField', 'ListField']
+__all__ = ['Field', 'StringField', 'NumberField', 'IntegerField', 
+            'FloatField', 'EmbeddedDocumentField', 'GenericDictField', 
+            'DictField', 'GenericListField', 'ListField']
 
 class Field(object):
     def __init__(self, required=False, default=None, 
@@ -70,9 +71,9 @@ class GenericDictField(Field):
 
 class DictField(Field):
     def __init__(self, document, **kwargs):
-        from document import Document
-        if not issubclass(document, Document):
-            raise TypeError("Argument 'embedded_doc' should be Document type.")
+        from document import EmbeddedDocument
+        if not issubclass(document, EmbeddedDocument):
+            raise TypeError("Argument 'embedded_doc' should be EmbeddedDocument type.")
 
         self.document = document
         super(DictField, self).__init__(**kwargs)
@@ -93,8 +94,10 @@ class GenericListField(Field):
 
 class ListField(Field):
     def __init__(self, field, **kwargs):
+        if not isinstance(field, Field):
+            raise ValueError('argument field of ListField should be Field type.')
         self.field = field
         super(ListField, self).__init__(**kwargs)
     
-    def validate(self, value):        
+    def validate(self, value): 
         return value
