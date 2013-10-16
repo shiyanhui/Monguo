@@ -75,7 +75,7 @@ class MonguoMeta(type):
                             new_attr = staticmethod(gen.coroutine(attr))
                             setattr(new_class, name, new_attr)
         return new_class
-        
+
 class BaseDocument(object):
     @classmethod
     def fields_dict(cls):
@@ -85,6 +85,38 @@ class BaseDocument(object):
                 fields.update({name: attr})
         return fields
 
+    @classmethod
+    def validate_document(cls, document_cls, document):
+        _document = {}
+        fields_dict = document_cls.fields_dict()
+
+        for name, attr in document.items():
+            if not util.legal_variable_name(name):
+                raise NameError("%s named error." % name)
+
+            if name not in fields_dict:
+                raise UndefinedFieldError(field=name)
+
+        for name, attr in fields_dict.items():
+            if (attr.required and not document.has_key(name) 
+                              and attr.default is None):
+                raise RequiredError(field=name)
+
+            value = None
+            if (attr.required and not document.has_key(name) 
+                              and attr.default is not None):
+                value = attr.default
+            elif document.has_key(name):
+                value = document[name]
+
+            if value is not None:
+                if not isinstance(attr, DictField):
+                    value = attr.validate(value)
+                else:
+                    value = cls.validate_document(attr.document, value)
+            
+            _document[name] = value
+        return _document
 
 class EmbeddedDocument(BaseDocument):
     pass  

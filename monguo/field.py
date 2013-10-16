@@ -4,9 +4,44 @@ import re
 import error
 import util
 
-__all__ = ['Field', 'StringField', 'IntegerField',
+from document import BaseDocument
+
+__all__ = ['validate_document', 'Field', 'StringField', 'IntegerField',
            'FloatField', 'EmbeddedDocumentField', 'GenericDictField', 
-           'DictField', 'GenericListField', 'ListField']
+           'DictField', 'GenericListField', 'ListField',]
+
+def validate_document(document_cls, document):
+    _document = {}
+    fields_dict = document_cls.fields_dict()
+
+    for name, attr in document.items():
+        if not util.legal_variable_name(name):
+            raise NameError("%s named error." % name)
+
+        if name not in fields_dict:
+            raise UndefinedFieldError(field=name)
+
+    for name, attr in fields_dict.items():
+        if (attr.required and not document.has_key(name) 
+                          and attr.default is None):
+            raise RequiredError(field=name)
+
+        value = None
+        if (attr.required and not document.has_key(name) 
+                          and attr.default is not None):
+            value = attr.default
+        elif document.has_key(name):
+            value = document[name]
+
+        if value is not None:
+            if not isinstance(attr, DictField):
+                value = attr.validate(value)
+            else:
+                value = validate_document(attr.document, value)
+        
+        _document[name] = value
+    return _document
+
 
 class Field(object):
     def __init__(self, required=False, default=None, unique=False, 
@@ -190,6 +225,14 @@ class DictField(GenericDictField):
 
     def validate(self, value):
         value = super(DictField, self).validate(value)
+        value = BaseDocument.validate_document(self.document, value)
+
+        for name, attr in self.document.fields_dict().item():
+            if attr.unique and not attr.in_list:
+                count = self.collection.find({name: value[name]}).count()
+                if count:
+                    raise UniqueError(field=name)
+                    
         return value
 
 EmbeddedDocumentField = DictField
@@ -222,4 +265,8 @@ class ListField(GenericListField):
     
     def validate(self, value): 
         value = super(ListField, self).validate(value)
+
+        for item in value:
+            item = self.field.validate(item)
+
         return value

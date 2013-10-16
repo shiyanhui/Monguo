@@ -7,12 +7,14 @@ from bson.son import SON
 from tornado import gen
 from tornado.concurrent import Future, TracebackFuture
 from tornado.ioloop import IOLoop
+from pymongo.son_manipulator import SONManipulator
 
 from field import *
 from error import *
-from pymongo.son_manipulator import SONManipulator
+from document import BaseDocument
 
 __all__ = ['MonguoSONManipulator']
+
 
 class MonguoSONManipulator(SONManipulator):
     def __init__(self, document_cls, method_name, **options):
@@ -21,42 +23,23 @@ class MonguoSONManipulator(SONManipulator):
         self.options = options
 
     def __check_value(self, field, name, value):
-        field.validate(value)
+        value = field.validate(value)
 
-        if field.unique and not field.in_list:
+        if field.unique and not field.in_list 
+                        and util.legal_variable_name(name):
             count = self.collection.find({name: value}).count()
             if count:
                 raise UniqueError(field=name)
 
-        if field.candidate: 
-            if value not in field.candidate:
-                raise CandidateError(field=name)
-
     def insert(self):
-        _son = {}
+        son = BaseDocument.validate_document(self.document_cls, self.son)
 
-        for name, attr in self.document_cls.fields_dict().items():
-            if (attr.required and not self.son.has_key(name) 
-                              and attr.default is None):
-                raise RequiredError(field=name)
-
-            value = None
-            if (attr.required and not self.son.has_key(name) 
-                              and attr.default is not None):
-                value = attr.default
-
-            elif self.son.has_key(name):
-                value = self.son[name]
-
-            if value is not None:
-                self.__check_value(attr, name, value)
-                _son[name] = value
-
-        for name, attr in self.son.items():
-            if name not in self.document_cls.fields_dict():
-                raise UndefinedFieldError(field=name)
-
-        return _son
+        for name, attr in self.document_cls.fields_dict().item():
+            if attr.unique and not attr.in_list:
+                count = self.collection.find({name: son[name]}).count()
+                if count:
+                    raise UniqueError(field=name)
+        return son
 
     def save(self):
         if self.son.has_key('_id'):
