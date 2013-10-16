@@ -13,10 +13,10 @@ from manipulator import MonguoSONManipulator
 from error import *
 from field import *
 
+
 def bound_method(monguo_cls, motor_method, has_write_concern):
     @classmethod
     def method(cls, *args, **kwargs):
-        
         options = {'args': args, 'kwargs': kwargs}
         collection = cls.get_collection()
         collection.database.add_son_manipulator(
@@ -30,12 +30,14 @@ def bound_method(monguo_cls, motor_method, has_write_concern):
         return new_method(*args, **kwargs)
     return method
 
+
 class MonguoAttributeFactory(object):
     def __init__(self, has_write_concern):
         self.has_write_concern = has_write_concern
 
     def create_attribute(self, cls, attr_name):
         return bound_method(cls, attr_name, self.has_write_concern)
+
 
 class ReadAttribute(MonguoAttributeFactory):
     def __init__(self):
@@ -46,9 +48,11 @@ class WriteAttribute(MonguoAttributeFactory):
     def __init__(self):
         super(WriteAttribute, self).__init__(has_write_concern=True)
 
+
 class CommandAttribute(MonguoAttributeFactory):
     def __init__(self):
         super(CommandAttribute, self).__init__(has_write_concern=False)
+
 
 class MonguoMeta(type):
     def __new__(cls, name, bases, attrs):
@@ -74,9 +78,24 @@ class MonguoMeta(type):
 
 
 class BaseDocument(object):
+    @classmethod
+    def fields_dict(cls):
+        fields = {}
+        for name, attr in cls.__dict__.items():
+            if isinstance(attr, Field):
+                fields.update({name: attr})
+        return fields
+
+
+class EmbeddedDocument(BaseDocument):
+    pass  
+
+
+class Document(BaseDocument):
     __delegate_class__ = motor.Collection
     __metaclass__      = MonguoMeta
-
+    meta               = {}
+    
     create_index      = CommandAttribute()
     drop_indexes      = CommandAttribute()
     drop_index        = CommandAttribute()
@@ -101,20 +120,6 @@ class BaseDocument(object):
     aggregate         = ReadAttribute()
     uuid_subtype      = motor.ReadWriteProperty()
     full_name         = motor.ReadOnlyProperty()
-
-class EmbeddedDocument(BaseDocument):
-    pass  
-
-class Document(BaseDocument):
-    meta = {}
-
-    @classmethod
-    def fields_dict(cls):
-        fields = {}
-        for name, attr in cls.__dict__.items():
-            if isinstance(attr, Field):
-                fields.update({name: attr})
-        return fields
 
     @classmethod
     def get_database(cls):

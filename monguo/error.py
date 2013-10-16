@@ -1,17 +1,19 @@
 # -*- coding: utf-8 -*-
 
 __all__ = ['ConnectionError', 'AssignmentError', 'RequiredError', 
-            'UniqueError', 'CandidateError', 'UndefinedFieldError',
-            'FieldDeleteError', 'FieldRenameError', 'FieldNameError']
+           'UniqueError', 'CandidateError', 'UndefinedFieldError',
+           'FieldDeleteError', 'FieldRenameError', 'FieldNameError', 
+           'NotSupportError']
 
 ASSIGNMENT_ERROR   = "Variable '%s' cant't be assgined!"
 REQUIRED_MESSAGE   = "Field '%s' required!"
 UNIQUE_ERROR       = "Field '%s' is unique!"
 CANDIDATE_ERROR    = "Field '%s' not in candidate!"
 UNDEFINED_ERROR    = "Undefined field '%s' in document!"
-FIELD_DELETE_ERROR = "Field '%s' is required, you cant delete it!"
+FIELD_DELETE_ERROR = "Field '%s' is required, you can't delete it!"
 FIELD_RENAME_ERROR = "Field '%s' can't be renamed!"
 FIELD_NAME_ERROR   = "Field name '%s' can't contain character '.' or '$'!"
+NOT_SUPPORT_ERROR  = 'Operation %s is not supported.'
 
 class MonguoBaseError(Exception):
     def __init__(self, message=None):
@@ -22,6 +24,13 @@ class MonguoBaseError(Exception):
 
 class ConnectionError(MonguoBaseError):
     pass
+
+class NotSupportError(MonguoBaseError):
+    def __init__(self, operation):
+        self.operation = operation
+    
+    def __str__(self):
+        return repr(NOT_SUPPORT_ERROR % self.operation)
 
 class FieldCheckError(MonguoBaseError):
     def __init__(self, base_message, field=None, **kwargs):

@@ -8,8 +8,8 @@ __all__ = ['Field', 'StringField', 'NumberField', 'IntegerField',
            'DictField', 'GenericListField', 'ListField']
 
 class Field(object):
-    def __init__(self, required=False, default=None, 
-                            unique=False, candidate=None):
+    def __init__(self, required=False, default=None, unique=False, 
+                 candidate=None):
         self.required = required
         self.default = default
         self.unique = unique
@@ -22,7 +22,7 @@ class Field(object):
 
         if self.candidate is not None:
             if not (isinstance(self.candidate, tuple) or 
-                        isinstance(self.candidate, list)):
+                    isinstance(self.candidate, list)):
                 raise TypeError('candidate should be a list.')
 
             for item in self.candidate:
@@ -108,7 +108,8 @@ class ListField(Field):
         if not isinstance(field, Field):
             raise ValueError("Argument field of ListField should be Field"
                              "type.")
-        self.field.in_list(True)
+        self.field = field
+        self.field.in_list = True
         super(ListField, self).__init__(**kwargs)
     
     def validate(self, value): 

@@ -5,7 +5,6 @@ import motor
 from error import *
 
 class Connection(object):
-
     DEFAULT_CONNECTION_NAME = 'default'
 
     _connections = {}
@@ -13,10 +12,8 @@ class Connection(object):
     _default_db = None
 
     @classmethod
-    def connect(
-            cls, db_name=None,
-            connection_name=None,
-            replica_set=False, *args, **kwargs):
+    def connect(cls, db_name=None, connection_name=None, 
+                replica_set=False, *args, **kwargs):
 
         if connection_name is None:
             connection_name = Connection.DEFAULT_CONNECTION_NAME

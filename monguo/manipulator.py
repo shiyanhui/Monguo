@@ -20,7 +20,7 @@ class MonguoSONManipulator(SONManipulator):
         self.method_name  = method_name
         self.options = options
 
-    def check_value(self, field, name, value):
+    def __check_value(self, field, name, value):
         field.validate(value)
 
         if field.unique and not field.in_list:
@@ -49,7 +49,7 @@ class MonguoSONManipulator(SONManipulator):
                 value = self.son[name]
 
             if value is not None:
-                self.check_value(attr, name, value)
+                self.__check_value(attr, name, value)
                 _son[name] = value
 
         for name, attr in self.son.items():
@@ -173,11 +173,21 @@ class MonguoSONManipulator(SONManipulator):
                     raise TypeError("The field bitwith to is not an instance "
                                     "of IntegerField.")
 
+            elif operator == '$unset':
+                if not isinstance(attr, (GenericDictField, DictField)):
+                    raise TypeError("%s should be in GenericDictField or"
+                                    "DictField." % name)
+
+                if isinstance(attr, DictField):
+                    fields_dict = attr.document.fields_dict()
+                    if name in fields_dict and fields_dict[name].required:
+                        raise FieldDeleteError(field=name)
+
         def deal_with_operator(operator):
             for name, value in self.son[operator].items():
                 value = pre_deal(operator, value)
 
-                # Is the field name in self.son['$set'] is right? 
+                # Is the field name in self.son[operator] is right? 
                 name_list = check_key_in_operator_fields(name)
                 name_without_dollar = '.'.join([name for name in name_list 
                                                if name != '$'])
@@ -185,9 +195,16 @@ class MonguoSONManipulator(SONManipulator):
                 fields_dict = self.document_cls.fields_dict()
 
                 if name_list[0] not in fields_dict:
-                    raise UndefinedFieldError(field=name)
+                    raise UndefinedFieldError(field=name_list[0])
                 
                 current_attr = fields_dict[name_list[0]]
+                if operator == '$unset':
+                    last_name = name_list.pop()
+                    if not name_list:
+                        fields_dict = self.document_cls.fields_dict()
+                        if name in fields_dict and fields_dict[name].required:
+                            raise FieldDeleteError(field=name)
+
                 for index, name in enumerate(name_list):
                     if name == '$' or name.isdigit():
                         if index != len(name_list) - 1:
@@ -215,12 +232,17 @@ class MonguoSONManipulator(SONManipulator):
                                                     "GenericDictField or "
                                                     "DictField type." % name)
                         else:
-                            post_deal(operator, current_attr, 
-                                      name_without_dollar, value)
+                            if operator == '$unset':
+                                post_deal(operator, current_attr, last_name,
+                                          value)
+                            else:
+                                post_deal(operator, current_attr, 
+                                          name_without_dollar, value)
 
-                            for item in value:
-                                self.check_value(current_attr,
-                                                 name_without_dollar, value)
+                                for item in value:
+                                    self.__check_value(current_attr,
+                                                       name_without_dollar,
+                                                       value)
                             
                     else:
                         if index != len(name_list) - 1:
@@ -246,15 +268,21 @@ class MonguoSONManipulator(SONManipulator):
                                                     "GenericListField type." %
                                                     name)
                         else:
-                            post_deal(operator, current_attr, 
-                                      name_without_dollar, value)
-                            for item in value:
-                                self.check_value(current_attr,
-                                                 name_without_dollar, value)
+                            if operator == '$unset':
+                                post_deal(operator, current_attr, last_name,
+                                          value)
+                            else:
+                                post_deal(operator, current_attr, 
+                                          name_without_dollar, value)
+
+                                for item in value:
+                                    self.__check_value(current_attr,
+                                                       name_without_dollar,
+                                                       value)
 
         update_operators = ['$inc', '$name', '$setOnInsert', '$set', '$unset', 
                             '$addToSet', '$pop', '$pullAll', '$pull', '$sort',
-                            '$pushAll', '$push', '$each', '$slice', , '$bit' ,
+                            '$pushAll', '$push', '$each', '$slice', '$bit' ,
                             '$isolated']
 
         try:
@@ -263,7 +291,7 @@ class MonguoSONManipulator(SONManipulator):
             try:
                 spec = self.options['kwargs']['spec']
             except KeyError, e:
-                raise SyntaxError('lack of spec argument!')
+                raise SyntaxError("Lack of spec argument.")
 
         if not isinstance(spec, (dict, SON)):
             raise TypeError("spec argument should be a dict "
@@ -275,8 +303,7 @@ class MonguoSONManipulator(SONManipulator):
             upsert = self.options['kwargs'].get('upsert', False)
 
         if not isinstance(upsert, bool):
-            raise TypeError('upsert should be bool type.')
-
+            raise TypeError('Upsert should be bool type.')
 
         if not upsert or self.collection.find_one(spec):
             contain_operator = False
@@ -291,24 +318,23 @@ class MonguoSONManipulator(SONManipulator):
 
             if self.son.has_key('$rename'):
                 for name in self.son['$rename']:
-                    raise FieldRenameError(field=name)
-
-            if self.son.has_key('$unset'):
-                for name in self.son['$unset']:
-                    if name not in self.document_cls.fields_dict():
-                        raise UndefinedFieldError(field=name)
-
-                    if self.document_cls.fields_dict()[name].required:
-                        raise FieldDeleteError(field=name)
+                    raise NotSupportError(field=name)
 
             new_operators = ['$set', '$inc', '$addToSet', '$pushAll', '$push', 
-                             '$bit']
+                             '$bit', '$unset']
 
             for operator in new_operators:
                 if self.son.has_key(operator):
                     deal_with_operator(operator)
         else:
             if self.son.has_key('$setOnInsert'):
+                mongodb_version = (self.collection.database.
+                                   command('buildInfo')['version'])
+                if mongodb_version < '2.4':
+                    raise KeyError("Your Mongdb's version is %s, only version "
+                                   "2.4+ support '$setOnInsert'." %
+                                   mongodb_version)
+
                 self.son = self.son['$setOnInsert']
                 self.son = self.insert()
 
