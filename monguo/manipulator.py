@@ -11,7 +11,6 @@ from pymongo.son_manipulator import SONManipulator
 
 from field import *
 from error import *
-from document import BaseDocument
 
 __all__ = ['MonguoSONManipulator']
 
@@ -24,17 +23,19 @@ class MonguoSONManipulator(SONManipulator):
 
     def __check_value(self, field, name, value):
         value = field.validate(value)
-
-        if field.unique and not field.in_list 
-                        and util.legal_variable_name(name):
+        if (field.unique and not field.in_list 
+                         and util.legal_variable_name(name)):
             count = self.collection.find({name: value}).count()
             if count:
                 raise UniqueError(field=name)
 
+        return value
+
     def insert(self):
+        from document import BaseDocument
         son = BaseDocument.validate_document(self.document_cls, self.son)
 
-        for name, attr in self.document_cls.fields_dict().item():
+        for name, attr in self.document_cls.fields_dict().items():
             if attr.unique and not attr.in_list:
                 count = self.collection.find({name: son[name]}).count()
                 if count:
@@ -75,7 +76,10 @@ class MonguoSONManipulator(SONManipulator):
             return name_list
 
         def pre_deal(operator, value):
-            if operator == '$addToSet':
+            if operator == '$set': 
+                value = [value]
+
+            elif operator == '$addToSet':
                 if isinstance(value, dict) and '$each' in value:
                     if len(value.items()) > 1:
                         raise SyntaxError("There cant't be other keys except "
@@ -137,9 +141,9 @@ class MonguoSONManipulator(SONManipulator):
                                     "ListField or GenericListField.")
 
             elif operator == '$inc':
-                if not isinstance(attr, NumberField):
+                if not isinstance(attr, (IntegerField, FloatField)):
                     raise TypeError("The field assigned to is not an instance "
-                                    "of NumberField.")
+                                    "of IntegerField or FloatField.")
 
             elif operator == '$pushAll':
                 if not isinstance(attr, (ListField, GenericListField)):
@@ -170,6 +174,7 @@ class MonguoSONManipulator(SONManipulator):
             for name, value in self.son[operator].items():
                 value = pre_deal(operator, value)
 
+                original_name = name
                 # Is the field name in self.son[operator] is right? 
                 name_list = check_key_in_operator_fields(name)
                 name_without_dollar = '.'.join([name for name in name_list 
@@ -205,9 +210,9 @@ class MonguoSONManipulator(SONManipulator):
                                                     "ListField type." %
                                                     name)
                             else:
-                                if isinstance(current_attr, DictField):
+                                if isinstance(current_attr.field, DictField):
                                     current_attr = current_attr.field
-                                elif isinstance(current_attr, 
+                                elif isinstance(current_attr.field, 
                                                 GenericDictField):
                                     break
                                 else:
@@ -223,16 +228,21 @@ class MonguoSONManipulator(SONManipulator):
                                           name_without_dollar, value)
 
                                 for item in value:
-                                    self.__check_value(current_attr,
-                                                       name_without_dollar,
-                                                       value)
+                                    result = self.__check_value(current_attr,
+                                                        name_without_dollar,
+                                                        item)
+                                    self.son[operator][original_name] = result
                             
                     else:
                         if index != len(name_list) - 1:
-                            if util.legal_variable_name(name_list[index + 1]):
+                            next_name = name_list[index + 1]
+
+                            if util.legal_variable_name(next_name):
                                 if isinstance(current_attr, 
-                                              EmbeddedDocumentField):
-                                    current_attr = current_attr.document
+                                              DictField):
+                                    current_attr = (current_attr.document.
+                                                    fields_dict()[next_name])
+
                                 elif isinstance(current_attr, 
                                                 GenericDictField):
                                     break
@@ -259,9 +269,10 @@ class MonguoSONManipulator(SONManipulator):
                                           name_without_dollar, value)
 
                                 for item in value:
-                                    self.__check_value(current_attr,
-                                                       name_without_dollar,
-                                                       value)
+                                    result = self.__check_value(current_attr,
+                                                        name_without_dollar,
+                                                        item)
+                                    self.son[operator][original_name] = result
 
         update_operators = ['$inc', '$name', '$setOnInsert', '$set', '$unset', 
                             '$addToSet', '$pop', '$pullAll', '$pull', '$sort',

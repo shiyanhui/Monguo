@@ -11,7 +11,7 @@ from bson.son import SON
 from connection import Connection
 from manipulator import MonguoSONManipulator
 from error import *
-from field import *
+from field import Field, DictField
 
 
 def bound_method(monguo_cls, motor_method, has_write_concern):
@@ -114,9 +114,9 @@ class BaseDocument(object):
                     value = attr.validate(value)
                 else:
                     value = cls.validate_document(attr.document, value)
-            
             _document[name] = value
         return _document
+
 
 class EmbeddedDocument(BaseDocument):
     pass  
