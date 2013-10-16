@@ -28,7 +28,7 @@ class Connection(object):
         try:
             connection = client_class(*args, **kwargs).open_sync()
         except Exception, e:
-            raise ConnectionError('Cant\'t connect to mongdb.')
+            raise ConnectionError("Cant't connect to mongdb.")
 
         Connection._connections[connection_name] = connection
 
@@ -58,12 +58,12 @@ class Connection(object):
     def get_db(cls, connection_name=None, db_name=None):
         connection = Connection.get_connection(connection_name)
         if connection is None:
-            raise ConnectionError('mongdb has not been connected!')
+            raise ConnectionError("Mongdb has not been connected!")
 
         if db_name is None:
             db_name = Connection._default_db
         if db_name is None:
-            raise ConnectionError('please set a database first!')
+            raise ConnectionError("Please set a database first!")
 
         return connection[db_name]
 

@@ -119,7 +119,7 @@ class Document(BaseDocument):
     @classmethod
     def get_database(cls):
         connection_name = (cls.meta['connection'] if 'connection' in cls.meta
-                            else None)
+                           else None)
         db_name = cls.meta['db'] if 'db' in cls.meta else None
         db = Connection.get_db(connection_name, db_name)
         return db
@@ -128,7 +128,7 @@ class Document(BaseDocument):
     def get_collection(cls):
         db = cls.get_database()
         collection_name = (cls.meta['collection'] if 'collection' in cls.meta
-                            else util.camel_to_underline(cls.__name__))
+                           else util.camel_to_underline(cls.__name__))
         collection = db[collection_name]
         return collection
 

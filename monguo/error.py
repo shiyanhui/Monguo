@@ -33,39 +33,39 @@ class FieldCheckError(MonguoBaseError):
 class AssignmentError(FieldCheckError):
     def __init__(self, field=None, **kwargs):
         super(AssignmentError, self).__init__(ASSIGNMENT_ERROR, 
-                                                field=field, **kwargs)
+                                              field=field, **kwargs)
 
 class RequiredError(FieldCheckError):
     def __init__(self, field=None, **kwargs):
         super(RequiredError, self).__init__(REQUIRED_MESSAGE, 
-                                                field=field, **kwargs)
+                                            field=field, **kwargs)
 
 class UniqueError(FieldCheckError):
     def __init__(self, field=None, **kwargs):
         super(UniqueError, self).__init__(UNIQUE_ERROR, 
-                                                field=field, **kwargs)
+                                          field=field, **kwargs)
 
 class CandidateError(FieldCheckError):
     def __init__(self, field=None, **kwargs):
         super(CandidateError, self).__init__(CANDIDATE_ERROR, 
-                                                field=field, **kwargs)
+                                             field=field, **kwargs)
 
 class UndefinedFieldError(FieldCheckError):
     def __init__(self, field=None, **kwargs):
         super(UndefinedFieldError, self).__init__(UNDEFINED_ERROR, 
-                                                field=field, **kwargs)
+                                                  field=field, **kwargs)
 
 class FieldDeleteError(FieldCheckError):
     def __init__(self, field=None, **kwargs):
         super(FieldDeleteError, self).__init__(FIELD_DELETE_ERROR, 
-                                                field=field, **kwargs)
+                                               field=field, **kwargs)
 
 class FieldRenameError(FieldCheckError):
     def __init__(self, field=None, **kwargs):
         super(FieldRenameError, self).__init__(FIELD_RENAME_ERROR, 
-                                                field=field, **kwargs)
+                                               field=field, **kwargs)
 
 class FieldNameError(FieldCheckError):
     def __init__(self, field=None, **kwargs):
         super(FieldNameError, self).__init__(FIELD_NAME_ERROR, 
-                                                field=field, **kwargs)
+                                             field=field, **kwargs)

@@ -20,10 +20,10 @@ class MonguoSONManipulator(SONManipulator):
         self.method_name  = method_name
         self.options = options
 
-    def check_value(self, field, name, value, list_item=False):
+    def check_value(self, field, name, value):
         field.validate(value)
 
-        if field.unique and not list_item:
+        if field.unique and not field.in_list:
             count = self.collection.find({name: value}).count()
             if count:
                 raise UniqueError(field=name)
@@ -37,12 +37,12 @@ class MonguoSONManipulator(SONManipulator):
 
         for name, attr in self.document_cls.fields_dict().items():
             if (attr.required and not self.son.has_key(name) 
-                                        and attr.default is None):
+                              and attr.default is None):
                 raise RequiredError(field=name)
 
             value = None
             if (attr.required and not self.son.has_key(name) 
-                                    and attr.default is not None):
+                              and attr.default is not None):
                 value = attr.default
 
             elif self.son.has_key(name):
@@ -73,7 +73,7 @@ class MonguoSONManipulator(SONManipulator):
             '''Check whether the field name in '$set' is validated.'''
 
             name_list = key.split('.')
-            name_error = NameError('%s is an illegal key!', key)
+            name_error = NameError("%s is an illegal key!", key)
             for name in name_list:
                 if not (util.legal_variable_name(name) or name.isdigit() or 
                         name == '$'):
@@ -95,89 +95,92 @@ class MonguoSONManipulator(SONManipulator):
             if operator == '$addToSet':
                 if isinstance(value, dict) and '$each' in value:
                     if len(value.items()) > 1:
-                        raise SyntaxError("There cant't be other keys except '$each'.")
+                        raise SyntaxError("There cant't be other keys except "
+                                          "'$each'.")
 
                     value = value['$each']
                     if not isinstance(value, (list, tuple)):
-                        raise TypeError("Value of '$each' should be list or tuple type.")
+                        raise TypeError("Value of '$each' should be list or "
+                                        "tuple type.")
                 else:
                     value = [value]
+
             elif operator == '$inc':
                 if not util.isnum(value):
-                    raise ValueError('value in $inc must be number.')
+                    raise ValueError("Value in '$inc' must be number.")
                 value = [value]
+
             elif operator == '$pushAll':
                 if not isinstance(value, (list, tuple)):
-                    raise TypeError('value in $pushAll should be list or tuple.')
+                    raise TypeError("Value in '$pushAll' should be list or "
+                                    "tuple.")
             elif operator == '$push':
                 if isinstance(value, dict) and '$each' in value:
                     if len(value.items()) > 1:
-                        raise SyntaxError("There cant't be other keys except '$each'.")
+                        raise SyntaxError("There cant't be other keys except "
+                                          "'$each'.")
 
                     value = value['$each']
                     if not isinstance(value, (list, tuple)):
-                        raise TypeError("Value of '$each' should be list or tuple type.")
+                        raise TypeError("Value of '$each' should be list or "
+                                        "tuple type.")
                 else:
                     value = [value]
 
             elif operator == '$bit':
                 if not isinstance(value, dict):
-                    raise TypeError('The field value of $bit shoud be dict type.')
+                    raise TypeError("The field value of '$bit' shoud be dict "
+                                    "type.")
 
                 if len(value.items()) != 1:
-                    raise ValueError("Can't have other key except 'and' and 'or' in '$bit'")
+                    raise ValueError("Can't have other key except 'and' and "
+                                     "'or' in '$bit'")
 
                 key = value.keys()[0]
                 if key != 'and' and key != 'or':
-                    raise ValueError("Key in $bit should be 'and' or 'or'.")
+                    raise ValueError("Key in '$bit' should be 'and' or 'or'.")
 
                 if not isinstance(value[key], (int, long)):
-                    raise TypeError("Value in $bit should be int or long type.")
+                    raise TypeError("Value in '$bit' should be int or long "
+                                    "type.")
+
                 value = [value[key]]
             return value
 
         def post_deal(operator, attr, name, value):
             if operator == '$addToSet':
                 if not isinstance(attr, (ListField, GenericListField)):
-                    raise TypeError('The field added to is not an instance of ListField or GenericListField.')
-
-                for item in value:
-                    self.check_value(current_attr, name_without_dollar, value, list_item=True)
+                    raise TypeError("The field added to is not an instance of "
+                                    "ListField or GenericListField.")
 
             elif operator == '$inc':
                 if not isinstance(attr, NumberField):
-                    raise TypeError('The field assigned to is not an instance of NumberField.')
-                for item in value:
-                    self.check_value(current_attr, name_without_dollar, value, list_item=True)
+                    raise TypeError("The field assigned to is not an instance "
+                                    "of NumberField.")
 
             elif operator == '$pushAll':
                 if not isinstance(attr, (ListField, GenericListField)):
-                    raise TypeError('The field added to is not an instance of ListField or GenericListField.')
-
-                for item in value:
-                    self.check_value(current_attr, name_without_dollar, value, list_item=True)
+                    raise TypeError("The field added to is not an instance of "
+                                    "ListField or GenericListField.")
 
             elif operator == '$push':
                 if not isinstance(attr, (ListField, GenericListField)):
-                    raise TypeError('The field added to is not an instance of ListField or GenericListField.')
-
-                for item in value:
-                    self.check_value(current_attr, name_without_dollar, value, list_item=True)
+                    raise TypeError("The field added to is not an instance of "
+                                    " ListField or GenericListField.")
 
             elif operator == '$bit':
                 if not isinstance(attr, IntegerField):
-                    raise TypeError('The field bitwith to is not an instance of IntegerField.')
-
-                for item in value:
-                    self.check_value(current_attr, name_without_dollar, value, list_item=True)
+                    raise TypeError("The field bitwith to is not an instance "
+                                    "of IntegerField.")
 
         def deal_with_operator(operator):
             for name, value in self.son[operator].items():
-
                 value = pre_deal(operator, value)
+
                 # Is the field name in self.son['$set'] is right? 
                 name_list = check_key_in_operator_fields(name)
-                name_without_dollar = '.'.join([name for name in name_list if name != '$'])
+                name_without_dollar = '.'.join([name for name in name_list 
+                                               if name != '$'])
 
                 fields_dict = self.document_cls.fields_dict()
 
@@ -193,42 +196,66 @@ class MonguoSONManipulator(SONManipulator):
                             if next_name.isdigit():
                                 if isinstance(current_attr, ListField):
                                     current_attr = current_attr.field
-                                elif isinstance(current_attr, GenericListField):
+                                elif isinstance(current_attr, 
+                                                GenericListField):
                                     break
                                 else:
-                                    raise TypeError('item in %s should be GenericListField or ListField type.' % name)
+                                    raise TypeError("item in %s should be "
+                                                    "GenericListField or "
+                                                    "ListField type." %
+                                                    name)
                             else:
                                 if isinstance(current_attr, DictField):
                                     current_attr = current_attr.field
-                                elif isinstance(current_attr, GenericDictField):
+                                elif isinstance(current_attr, 
+                                                GenericDictField):
                                     break
                                 else:
-                                    raise TypeError('item in %s should be GenericDictField or DictField type.' % name)
+                                    raise TypeError("item in %s should be "
+                                                    "GenericDictField or "
+                                                    "DictField type." % name)
                         else:
-                            post_deal(operator, current_attr, name_without_dollar, value)
+                            post_deal(operator, current_attr, 
+                                      name_without_dollar, value)
+
+                            for item in value:
+                                self.check_value(current_attr,
+                                                 name_without_dollar, value)
                             
                     else:
                         if index != len(name_list) - 1:
                             if util.legal_variable_name(name_list[index + 1]):
-                                if isinstance(current_attr, EmbeddedDocumentField):
+                                if isinstance(current_attr, 
+                                              EmbeddedDocumentField):
                                     current_attr = current_attr.document
-                                elif isinstance(current_attr, GenericDictField):
+                                elif isinstance(current_attr, 
+                                                GenericDictField):
                                     break
                                 else:
-                                    raise TypeError("'%s' isn't EmbeddedDocumentField or GenericDictField type." % name)
+                                    raise TypeError("'%s' isn't DictField or "
+                                                    "GenericDictField type." %
+                                                    name)
                             else:
                                 if isinstance(current_attr, ListField):
                                     current_attr = current_attr.field
-                                elif isinstance(current_attr, GenericListField):
+                                elif isinstance(current_attr, 
+                                                GenericListField):
                                     break
                                 else:
-                                    raise TypeError("%s isn't ListField or GenericListField type." % name)
+                                    raise TypeError("%s isn't ListField or "
+                                                    "GenericListField type." %
+                                                    name)
                         else:
-                            post_deal(operator, current_attr, name_without_dollar, value)
+                            post_deal(operator, current_attr, 
+                                      name_without_dollar, value)
+                            for item in value:
+                                self.check_value(current_attr,
+                                                 name_without_dollar, value)
 
         update_operators = ['$inc', '$name', '$setOnInsert', '$set', '$unset', 
-                    '$addToSet', '$pop', '$pullAll', '$pull', '$pushAll',
-                    '$push', '$each', '$slice', '$sort', '$bit', '$isolated']
+                            '$addToSet', '$pop', '$pullAll', '$pull', '$sort',
+                            '$pushAll', '$push', '$each', '$slice', , '$bit' ,
+                            '$isolated']
 
         try:
             spec = self.options['args'][0]
@@ -239,8 +266,8 @@ class MonguoSONManipulator(SONManipulator):
                 raise SyntaxError('lack of spec argument!')
 
         if not isinstance(spec, (dict, SON)):
-            raise TypeError('spec argument should be a dict \
-                                        type or SON instance.')
+            raise TypeError("spec argument should be a dict "
+                            "type or SON instance.")
 
         try:
             upsert = self.options['args'][2]
@@ -274,7 +301,8 @@ class MonguoSONManipulator(SONManipulator):
                     if self.document_cls.fields_dict()[name].required:
                         raise FieldDeleteError(field=name)
 
-            new_operators = ['$set', '$inc', '$addToSet', '$pushAll', '$push', '$bit']
+            new_operators = ['$set', '$inc', '$addToSet', '$pushAll', '$push', 
+                             '$bit']
 
             for operator in new_operators:
                 if self.son.has_key(operator):
