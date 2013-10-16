@@ -75,8 +75,7 @@ class MonguoMeta(type):
                             new_attr = staticmethod(gen.coroutine(attr))
                             setattr(new_class, name, new_attr)
         return new_class
-
-
+        
 class BaseDocument(object):
     @classmethod
     def fields_dict(cls):

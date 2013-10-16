@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
 
+import re
 import error
 import util
 
-__all__ = ['Field', 'StringField', 'NumberField', 'IntegerField', 
+__all__ = ['Field', 'StringField', 'IntegerField',
            'FloatField', 'EmbeddedDocumentField', 'GenericDictField', 
            'DictField', 'GenericListField', 'ListField']
 
 class Field(object):
     def __init__(self, required=False, default=None, unique=False, 
-                 candidate=None):
+                 candidate=None, strict=False):
         self.required = required
         self.default = default
         self.unique = unique
@@ -18,18 +19,18 @@ class Field(object):
         self._in_list = False
 
         if self.default is not None:
-            self.validate(self.default)
+            self.default = self.check_type(self.default)
 
         if self.candidate is not None:
-            if not (isinstance(self.candidate, tuple) or 
-                    isinstance(self.candidate, list)):
-                raise TypeError('candidate should be a list.')
+            if not isinstance(self.candidate, (list, tuple):
+                raise TypeError("'candidate' should be list or tuple type.")
 
-            for item in self.candidate:
-                self.validate(item)
+            for value in self.candidate:
+                value = self.check_type(value)
 
-    def validate(self, value):
-        return value
+            if self.default is not None and self.default not in self.candidate:
+                raise ValueError("default value %s isn't in candidate %s" % 
+                                 (self.default, self.candidate))
 
     @property
     def in_list(self):
@@ -39,37 +40,124 @@ class Field(object):
     def in_list(self, value):
         self._in_list = value
 
+    def check_type(self, value):
+        return value
+
+    def validate(self, value):
+        value = self.check_type(value)
+
+        if self.candidate and value not in self.candidate:
+            raise ValidateError("%s not in %s." % (value, self.candidate))
+        return value
+
 class StringField(Field):
-    def __init__(self, **kwargs):
+    def __init__(self, regex=None, min_length=None, max_length=None, **kwargs):
         super(StringField, self).__init__(**kwargs)
 
-    def validate(self, value):
-        return value
+        if min_length is not None and not isinstance(min_length, (int, long)):
+            raise TypeError("Argument 'min_length' should be integer value.")
 
-class NumberField(Field):
-    def __init__(self, **kwargs):
-        super(NumberField, self).__init__(**kwargs)
+        if max_length is not None and not isinstance(max_length, (int, long)):
+            raise TypeError("Argument 'max_length' should be integer value.")
+        
+        if regex is not None and not isinstance(regex, basestring):
+            raise TypeError("Argument 'regex' should be string value.")
 
-    def validate(value):
+        self.regex = regex
+        self.min_length = min_length
+        self.max_length = max_length
+
+    def check_type(self, value):
+        if self.strict and not isinstance(value, basestring):
+            raise TypeError("%s is not string type." % value)
         try:
-            value = float(value)
+            value = repr(value)
         except:
-            raise ValueError("Value of NumberField must be a number.")
-
+            raise ValidateError("Can't convert %r to string." % value)
         return value
 
-class IntegerField(NumberField):
-    def __init__(self, **kwargs):
-        super(IntegerField, self).__init__(**kwargs)
-
     def validate(self, value):
+        value = super(StringField, self).validate(value)
+
+        if not isinstance(value, basestring):
+            raise FieldValueError(value, self.__class__.__name__)
+
+        if self.min_length is not None and len(value) < self.min_length:
+            raise ValidateError("String value is too short.")
+
+        if self.max_length is not None and len(value) > self.max_length: 
+            raise ValidateError("String value is too long.")
+
+        if self.regex is not None and re.match(regex, value) is None:
+            raise ValidateError("regex doesn't match.")
         return value
 
-class FloatField(NumberField):
-    def __init__(self, **kwargs):
-        super(IntegerField, self).__init__(**kwargs)
+class IntegerField(Field):
+    def __init__(self, min_value=None, max_value=None, **kwargs):
+        super(IntField, self).__init__(**kwargs)
+        if min_value is not None and 
+                        not isinstance(min_value, (int, long, float)):
+            raise TypeError("Argument 'min_value' should be integer value.")
+
+        if max_value is not None and not isinstance(max_value, (int, long)):
+            raise TypeError("Argument 'max_value' should be integer value.")
+
+        self.min_value = min_value
+        self.max_value = max_value
+
+    def check_type(self, value):
+        if self.strict and if not isinstance(value, (int, long)):
+            raise TypeError("'%s' is not int or long type." % value)
+        try:
+            value = long(value)
+        except Exception, e:
+            raise ValidateError("%s cann't be converted to int value." % value)
+        return value
 
     def validate(self, value):
+        value = super(IntegerField, self).validate(value)
+
+        if self.min is not None and value < self.min:
+            raise ValidateError("%s is smaller than %s." % 
+                                (value, self.min_value))
+
+        if self.max is not None and value > self.max:
+            raise ValidateError("%s is larger than %s." % 
+                                (self.value, self.max ))
+        return value
+
+class FloatField(Field):
+    def __init__(self, min_value=None, max_value=None, **kwargs):
+        super(IntField, self).__init__(**kwargs)
+        if min_value is not None and 
+                        not isinstance(min_value, (int, long, float)):
+            raise TypeError("Argument 'min_value' should be number.")
+
+        if max_value is not None and not isinstance(max_value, (int, long)):
+            raise TypeError("Argument 'max_value' should be integer value.")
+
+        self.min_value = min_value
+        self.max_value = max_value
+
+    def check_type(self, value):
+        if self.strict and not isinstance(value, float):
+            raise TypeError("%s is not float type." % value)
+        try:
+            value = long(value)
+        except Exception, e:
+            raise ValidateError("%s cann't be converted to int value." % value)
+        return value
+
+    def validate(self, value):
+        value = super(IntegerField, self).validate(value)
+
+        if self.min is not None and value < self.min:
+            raise ValidateError("%s is smaller than %s." % 
+                                (value, self.min_value))
+
+        if self.max is not None and value > self.max:
+            raise ValidateError("%s is larger than %s." % 
+                                (self.value, self.max ))
         return value
 
 class GenericDictField(Field):
