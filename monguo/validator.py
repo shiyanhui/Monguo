@@ -4,31 +4,16 @@ import re
 import util
 
 from tornado import gen
-from tornado.ioloop import IOLoop
-
 from field import *
 from error import *
+from connection import Connection
 
-class Finder(object):
-    def __init__(self, collection, condition):
-        self.collection = collection
-        self.condition = condition
-
-    @gen.coroutine
-    def is_unique(self):
-        result = yield self.collection.find_one(self.condition)
-        is_unique = False if result else True
-        raise gen.Return(is_unique)
-
-    @gen.coroutine
-    def command(self):
-        result = yield self.collection.database.command(condition)
-        raise gen.Return(result)
 
 class Validator(object):
     def __init__(self, document_cls, collection):
         self.document_cls = document_cls
-        self.collection   = collection
+        self.pymongo_db = Connection.get_database(pymongo=True)
+        self.collection = self.pymongo_db[collection.name]
 
     def __check_value(self, field, name, value):
         value = field.validate(value)
@@ -56,9 +41,8 @@ class Validator(object):
 
             for name, attr in self.document_cls.fields_dict().items():
                 if attr.unique and not attr.in_list:
-                    finder = Finder(self.collection, {name: new_doc[name]})
-                    is_unique = IOLoop.current().run_sync(finder.is_unique)
-                    if not is_unique:
+                    result = self.collection.find_one({name: new_doc[name]})
+                    if result:
                         raise UniqueError(field=name)
 
         args = [doc_or_docs]
@@ -308,7 +292,7 @@ class Validator(object):
                             '$isolated']
 
         if not isinstance(spec, dict):
-            raise TypeError("Argument 'spce' should be dict type.")
+            raise TypeError("Argument 'spec' should be dict type.")
 
         if not isinstance(document, dict):
             raise TypeError("Argument 'document' should be dict type.")
@@ -318,9 +302,8 @@ class Validator(object):
 
         kwargs.update({'upsert': upsert})
 
-        finder = Finder(self.collection, spec)
-        is_unique = IOLoop.current().run_sync(finder.is_unique)
-        if not upsert or not is_unique:
+        result = self.collection.find_one(spec)
+        if not upsert or result:
             contain_operator = False
             for name in document:
                 if name in update_operators:
@@ -343,9 +326,9 @@ class Validator(object):
                     deal_with_operator(operator)
         else:
             if document.has_key('$setOnInsert'):
-                finder = Finder(self.collection, 'buildInfo')
-                buildInfo = IOLoop.current().run_sync(finder.command)
-                mongodb_version = buildInfo['version']
+
+                mongodb_version = (self.pymongo_db.command('buildInfo')
+                                   ['version'])
 
                 if mongodb_version < '2.4':
                     raise KeyError("Your Mongdb's version is %s, only version "
@@ -355,15 +338,5 @@ class Validator(object):
                 document = document['$setOnInsert']
                 document, _ = self.insert(document)
 
-        return document, kwargs
-
-    def transform_incoming(self, son, collection):
-        self.collection = collection
-        self.son = son
-
-        try:
-            _son = getattr(self, self.method_name)()
-        except AttributeError, e:
-            pass
-
-        return _son
+        args = [spec, document]
+        return args, kwargs

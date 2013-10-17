@@ -15,18 +15,6 @@ from field import Field, DictField
 from connection import Connection
 from validator import Validator
 
-def insert(document_cls, collection, doc_or_docs, manipulate=True, safe=None, 
-           check_keys=True, continue_on_error=False, **kwargs):
-    pass
-
-def save(document_cls, collection, to_save, manipulate=True, safe=None, 
-         check_keys=True, **kwargs):
-    pass
-
-def update(document_cls, collection, spec, document, upsert=False,
-           manipulate=False, safe=None, multi=False, check_keys=True,
-           **kwargs):
-    pass
 
 def bound_method(monguo_cls, motor_method, has_write_concern):
     @classmethod
@@ -41,6 +29,7 @@ def bound_method(monguo_cls, motor_method, has_write_concern):
             args, kwargs = getattr(validator, motor_method)(*args, **kwargs)
         except AttributeError:
             pass
+        print args, kwargs
         return new_method(*args, **kwargs)
     return method
 

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import motor
+import pymongo
 
 from error import *
 
@@ -29,11 +30,13 @@ class Connection(object):
         client_class = (motor.MotorReplicaSetClient if replica_set else
                         motor.MotorClient)
         try:
-            connection = client_class(*args, **kwargs).open_sync()
+            motor_connection = client_class(*args, **kwargs).open_sync()
+            pymongo_connection = motor_connection.sync_client()
         except Exception, e:
             raise ConnectionError("Cant't connect to mongdb.")
 
-        Connection._connections[connection_name] = connection
+        Connection._connections[connection_name] = (motor_connection,
+                                                    pymongo_connection)
 
         Connection._default_connection = connection_name
         Connection._default_db = db_name
@@ -45,21 +48,24 @@ class Connection(object):
             Connection._default_connection = None
 
         if connection_name in Connection._connections:
-            Connection._connections[connection_name].close()
+            for connection in Connection._connections[connection_name]:
+                connection.close()
             del Connection._connections[connection_name]
-            del Connection._connection_setting[connection_name]
 
     @classmethod
-    def get_connection(cls, connection_name=None):
+    def get_connection(cls, connection_name=None, pymongo=False):
         if connection_name is None:
             connection_name = Connection._default_connection
 
-        return (None if connection_name not in Connection._connections else
-                Connection._connections[connection_name])
+        if connection_name not in Connection._connections:
+            return None
+        if not pymongo:
+            return Connection._connections[connection_name][0]
+        return Connection._connections[connection_name][1]
 
     @classmethod
-    def get_database(cls, connection_name=None, db_name=None):
-        connection = Connection.get_connection(connection_name)
+    def get_database(cls, connection_name=None, db_name=None, pymongo=False):
+        connection = Connection.get_connection(connection_name, pymongo)
         if connection is None:
             raise ConnectionError("Mongdb has not been connected!")
 
