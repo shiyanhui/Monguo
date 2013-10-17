@@ -10,10 +10,10 @@ import util
 from tornado import gen
 from bson.son import SON
 from connection import Connection
-from manipulator import MonguoSONManipulator
 from error import *
 from field import Field, DictField
 from connection import Connection
+from validator import Validator
 
 def insert(document_cls, collection, doc_or_docs, manipulate=True, safe=None, 
            check_keys=True, continue_on_error=False, **kwargs):
@@ -33,15 +33,14 @@ def bound_method(monguo_cls, motor_method, has_write_concern):
     def method(cls, *args, **kwargs):
         options = {'args': args, 'kwargs': kwargs}
         collection = cls.get_collection()
-        # collection.database.add_son_manipulator(
-        #             MonguoSONManipulator(cls, motor_method, **options))
-        
+
         new_method = getattr(collection, motor_method)
 
-        check_method = getattr(sys.modules[__name__], motor_method, None)
-        if check_method is not None:
-            args, kwargs = check_method(cls, collection, *args, **kwargs)
-
+        validator = Validator(cls, collection)
+        try:
+            args, kwargs = getattr(validator, motor_method)(*args, **kwargs)
+        except AttributeError:
+            pass
         return new_method(*args, **kwargs)
     return method
 
@@ -99,6 +98,12 @@ class BaseDocument(object):
 
     @classmethod
     def validate_document(cls, document_cls, document):
+        if not issubclass(document_cls, BaseDocument):
+            raise TypeError("Argument 'document_cls' should be Document type")
+
+        if not isinstance(document, dict):
+            raise TypeError("Argument 'document' should be dict type.")
+
         _document = {}
         fields_dict = document_cls.fields_dict()
 
