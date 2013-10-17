@@ -29,7 +29,6 @@ def bound_method(monguo_cls, motor_method, has_write_concern):
             args, kwargs = getattr(validator, motor_method)(*args, **kwargs)
         except AttributeError:
             pass
-        print args, kwargs
         return new_method(*args, **kwargs)
     return method
 
