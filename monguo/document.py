@@ -15,15 +15,13 @@ from field import Field, DictField
 from connection import Connection
 from validator import Validator
 
-
-def bound_method(monguo_cls, motor_method, has_write_concern):
+def bound_method(motor_method):
     @classmethod
     def method(cls, *args, **kwargs):
         options = {'args': args, 'kwargs': kwargs}
         collection = cls.get_collection()
 
         new_method = getattr(collection, motor_method)
-
         validator = Validator(cls, collection)
         try:
             args, kwargs = getattr(validator, motor_method)(*args, **kwargs)
@@ -32,14 +30,12 @@ def bound_method(monguo_cls, motor_method, has_write_concern):
         return new_method(*args, **kwargs)
     return method
 
-
 class DocumentAttributeFactory(object):
     def __init__(self, has_write_concern):
         self.has_write_concern = has_write_concern
 
-    def create_attribute(self, cls, attr_name):
-        return bound_method(cls, attr_name, self.has_write_concern)
-
+    def create_attribute(self, attr_name):
+        return bound_method(attr_name)
 
 class ReadAttribute(DocumentAttributeFactory):
     def __init__(self):
@@ -67,7 +63,7 @@ class MonguoMeta(type):
                         raise FieldNameError(field=name)
 
                 elif isinstance(attr, DocumentAttributeFactory):
-                    new_attr = attr.create_attribute(new_class, name)
+                    new_attr = attr.create_attribute(name)
                     setattr(new_class, name, new_attr)
 
                 elif isinstance(attr, types.FunctionType):

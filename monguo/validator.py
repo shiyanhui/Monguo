@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import re
+import types
+import inspect
+import greenlet
+import functools
 import util
 
 from tornado import gen
@@ -12,6 +16,8 @@ from connection import Connection
 class Validator(object):
     def __init__(self, document_cls, collection):
         self.document_cls = document_cls
+        self.motor_collection = collection
+
         self.pymongo_db = Connection.get_database(pymongo=True)
         self.collection = self.pymongo_db[collection.name]
 
@@ -56,11 +62,11 @@ class Validator(object):
             _id = to_save['_id']
             del to_save['_id']
             to_save, _ = self.insert(to_save)
-            to_save['_id'] = _id
+            to_save[0]['_id'] = _id
         else:
             to_save, _ = self.insert(to_save)
 
-        args = [to_save]
+        args = to_save
         return args, kwargs
 
     def update(self, spec, document, upsert=False, **kwargs):
