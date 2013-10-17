@@ -3,7 +3,6 @@
 import sys
 import inspect
 import motor
-import functools
 import types
 import util
 
@@ -15,42 +14,23 @@ from field import Field, DictField
 from connection import Connection
 from validator import Validator
 
-def bound_method(motor_method):
-    @classmethod
-    def method(cls, *args, **kwargs):
-        options = {'args': args, 'kwargs': kwargs}
-        collection = cls.get_collection()
 
-        new_method = getattr(collection, motor_method)
-        validator = Validator(cls, collection)
-        try:
-            args, kwargs = getattr(validator, motor_method)(*args, **kwargs)
-        except AttributeError:
-            pass
-        return new_method(*args, **kwargs)
-    return method
+class MonguoOperation(object):
+    def bound_method(self, monguo_method):
+        @classmethod
+        def method(cls, *args, **kwargs):
+            collection = cls.get_collection()
+            motor_method = getattr(collection, monguo_method)
 
-class DocumentAttributeFactory(object):
-    def __init__(self, has_write_concern):
-        self.has_write_concern = has_write_concern
-
-    def create_attribute(self, attr_name):
-        return bound_method(attr_name)
-
-class ReadAttribute(DocumentAttributeFactory):
-    def __init__(self):
-        super(ReadAttribute, self).__init__(has_write_concern=False)
-
-
-class WriteAttribute(DocumentAttributeFactory):
-    def __init__(self):
-        super(WriteAttribute, self).__init__(has_write_concern=True)
-
-
-class CommandAttribute(DocumentAttributeFactory):
-    def __init__(self):
-        super(CommandAttribute, self).__init__(has_write_concern=False)
-
+            validator = Validator(cls, collection)
+            try:
+                validate_method = getattr(validator, monguo_method)
+                args, kwargs = validate_method(*args, **kwargs)
+            except AttributeError:
+                pass
+            return motor_method(*args, **kwargs)
+        return method
+    
 
 class MonguoMeta(type):
     def __new__(cls, name, bases, attrs):
@@ -62,14 +42,15 @@ class MonguoMeta(type):
                     if not util.legal_variable_name(name):
                         raise FieldNameError(field=name)
 
-                elif isinstance(attr, DocumentAttributeFactory):
-                    new_attr = attr.create_attribute(name)
+                elif isinstance(attr, MonguoOperation):
+                    new_attr = attr.bound_method(name)
                     setattr(new_class, name, new_attr)
 
                 elif isinstance(attr, types.FunctionType):
                     new_attr = staticmethod(gen.coroutine(attr))
                     setattr(new_class, name, new_attr)
         return new_class
+
 
 class BaseDocument(object):
     @classmethod
@@ -127,30 +108,30 @@ class Document(BaseDocument):
     __metaclass__      = MonguoMeta
     meta               = {}
     
-    create_index      = CommandAttribute()
-    drop_indexes      = CommandAttribute()
-    drop_index        = CommandAttribute()
-    drop              = CommandAttribute()
-    ensure_index      = CommandAttribute()
-    reindex           = CommandAttribute()
-    rename            = CommandAttribute()
-    find_and_modify   = CommandAttribute()
-    map_reduce        = CommandAttribute()
-    update            = WriteAttribute()
-    insert            = WriteAttribute()
-    remove            = WriteAttribute()
-    save              = WriteAttribute()
-    index_information = ReadAttribute()
-    count             = ReadAttribute()
-    options           = ReadAttribute()
-    group             = ReadAttribute()
-    distinct          = ReadAttribute()
-    inline_map_reduce = ReadAttribute()
-    find_one          = ReadAttribute()
-    find              = ReadAttribute()
-    aggregate         = ReadAttribute()
-    uuid_subtype      = motor.ReadWriteProperty()
-    full_name         = motor.ReadOnlyProperty()
+    create_index      = MonguoOperation()
+    drop_indexes      = MonguoOperation()
+    drop_index        = MonguoOperation()
+    drop              = MonguoOperation()
+    ensure_index      = MonguoOperation()
+    reindex           = MonguoOperation()
+    rename            = MonguoOperation()
+    find_and_modify   = MonguoOperation()
+    map_reduce        = MonguoOperation()
+    update            = MonguoOperation()
+    insert            = MonguoOperation()
+    remove            = MonguoOperation()
+    save              = MonguoOperation()
+    index_information = MonguoOperation()
+    count             = MonguoOperation()
+    options           = MonguoOperation()
+    group             = MonguoOperation()
+    distinct          = MonguoOperation()
+    inline_map_reduce = MonguoOperation()
+    find_one          = MonguoOperation()
+    find              = MonguoOperation()
+    aggregate         = MonguoOperation()
+    uuid_subtype      = MonguoOperation()
+    full_name         = MonguoOperation()
 
     @classmethod
     def get_database_name(cls):
