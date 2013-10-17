@@ -3,11 +3,14 @@
 import re
 import util
 
+from bson.dbref import DBRef
+from bson.binary import Binary
 from error import *
 
-__all__ = ['Field', 'StringField', 'IntegerField',
+__all__ = ['Field', 'StringField', 'IntegerField', 'BooleanField',
            'FloatField', 'EmbeddedDocumentField', 'GenericDictField', 
-           'DictField', 'GenericListField', 'ListField',]
+           'DictField', 'GenericListField', 'ListField', 'EmailField',
+           'ReferenceField']
 
 class Field(object):
     def __init__(self, required=False, default=None, unique=False, 
@@ -166,10 +169,34 @@ class FloatField(Field):
         return value
 
 
-class GenericDictField(Field):
-    def __init__(self, **kwargs):
-        super(GenericDictField, self).__init__(**kwargs)
+class BooleanField(Field):
+    def check_type(self, value):
+        if self.strict and not isinstance(value, bool):
+            raise TypeError("'%s' isn't bool type." % value)
+        try:
+            value = bool(value)
+        except:
+            raise ValidateError("Cann't convert '%s' to bool." % value)
+        return  value
 
+    def validate( self ):
+        value = super(BooleanField, self).validate(value)
+        return value
+
+class EmailField(StringField):
+    EMAIL_REGEX = re.compile(
+        r"(^[-!#$%&'*+/=?^_`{}|~0-9A-Z]+(\.[-!#$%&'*+/=?^_`{}|~0-9A-Z]+)*"
+        r'|^"([\001-\010\013\014\016-\037!#-\[\]-\177]|\\[\001-\011\013\014\016-\177])*"'
+        r")@((?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,6}\.?$)"
+        r'|\[(25[0-5]|2[0-4]\d|[0-1]?\d?\d)(\.(25[0-5]|2[0-4]\d|[0-1]?\d?\d)){3}\]$', re.IGNORECASE )
+
+    def validate(self, value):
+        value = super(EmailField, self).validate(value)
+        if not EmailField.EMAIL_REGEX.match(value):
+            raise ValidateError("'%s' is not email format." % value)
+
+
+class GenericDictField(Field):
     def check_type(self, value):
         if self.strict and not isinstance(value, dict):
             raise TypeError("'%s' isn't dict type.")
@@ -209,9 +236,6 @@ class DictField(GenericDictField):
 EmbeddedDocumentField = DictField
 
 class GenericListField(Field):
-    def __init__(self, **kwargs):
-        super(GenericListField, self).__init__(**kwargs)
-
     def check_type(self, value):
         if self.strict and not isinstance(value, (list, tuple)):
             raise TypeError("'%s' isn't list or tuple typr.")
@@ -239,5 +263,38 @@ class ListField(GenericListField):
 
         for index, item in enumerate(value[::]):
             value[index] = self.field.validate(item)
+        return value
 
+
+class ReferenceField(Field):
+    def __init__(self, reference, **kwargs):
+        from document import Document
+        super(ReferenceField, self).__init__(**kwargs)
+        if not isinstance(reference, Document):
+            raise TypeError("Argument 'reference' should be Document type in "
+                            "ReferenceField.")
+
+        self.reference = reference
+
+    def check_type(self, value):
+        if self.strict and not isinstance(value, DBRef):
+            raise TypeError("Value '%s' isn't DBRef type." % value)
+        try:
+            value = DBRef(value)
+        except:
+            raise ValidateError("Cann't convert '%s' to DBRef." % value)
+        return value
+
+    def validate(self, value):
+        value = super(ReferenceField, self).validate(value)
+        if (value.database is not None and 
+                self.reference.get_database_name() != value.database):
+            raise ValidateError("Database is different betwwen '%s' and '%s'" %
+                                (self.reference.get_database_name(), 
+                                 value.database))
+
+        if value.collection != self.reference.get_collection_name():
+            raise ValidateError("Collection is different betwwen '%s' and '%s'"
+                                % (self.reference.get_collection_name, 
+                                   value.collection))
         return value

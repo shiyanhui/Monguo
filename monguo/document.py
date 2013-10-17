@@ -5,6 +5,7 @@ import motor
 import functools
 import types
 import util
+import Connection
 
 from tornado import gen
 from bson.son import SON
@@ -117,7 +118,7 @@ class BaseDocument(object):
             _document[name] = value
         return _document
 
-
+   
 class EmbeddedDocument(BaseDocument):
     pass  
 
@@ -152,20 +153,52 @@ class Document(BaseDocument):
     uuid_subtype      = motor.ReadWriteProperty()
     full_name         = motor.ReadOnlyProperty()
 
-    @classmethod
     def get_database(cls):
         connection_name = (cls.meta['connection'] if 'connection' in cls.meta
                            else None)
-        db_name = cls.meta['db'] if 'db' in cls.meta else None
-        db = Connection.get_db(connection_name, db_name)
+        db_name = cls.get_database_name()
+        db = Connection.get_database(connection_name, db_name)
         return db
 
-    @classmethod
     def get_collection(cls):
-        db = cls.get_database()
-        collection_name = (cls.meta['collection'] if 'collection' in cls.meta
-                           else util.camel_to_underline(cls.__name__))
+        db= cls.get_database()
+        collection_name = cls.get_collection_name()
         collection = db[collection_name]
         return collection
 
+    def get_database_name(cls):
+        db_name = (cls.mata['db'] if 'db' in cls.meta else 
+                   Connection.get_default_database_name())
+        return db_name
+
+    def get_collection_name(cls):
+        collection_name = (cls.meta['collection'] if 'collection' in cls.meta
+                           else util.camel_to_underline(cls.__name__))
+        return collection_name
+
+    def translate_dbref(cls, dbref):
+        if not isinstance(dbref, DBRef):
+            raise TypeError("'%s' isn't DBRef type.")
+
+        if dbref.database is not None:
+            connection_name = (cls.meta['connection'] if 'connection' in 
+                               cls.meta else None)
+            db = Connection.get_database(connection_name, dbref.database)
+        else:
+            db = cls.get_database()
+
+        collection = db[dbref.collection]
+        result = yield collection.find_one({'_id': ObjectId(dbref.id)})
+        raise gen.Return(result)
+
+    def translate_dbref_in_document(cls, document):
+        for name, value in document.items():
+            if isinstance(value, DBRef):
+                document[name] = yield cls.translate_dbref(value)
+        raise gen.Return(document)
+
+    def translate_dbref_in_document_list(cls, document_list):
+        for document in document_list:
+            document = yield cls.translate_dbref_in_document(document)
+        raise gen.Return(document_list)
       
