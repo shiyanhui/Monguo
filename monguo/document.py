@@ -105,8 +105,8 @@ class EmbeddedDocument(BaseDocument):
 
 
 class Document(BaseDocument):
-    __metaclass__      = MonguoMeta
-    meta               = {}
+    __metaclass__     = MonguoMeta
+    meta              = {}
     
     create_index      = MonguoOperation()
     drop_indexes      = MonguoOperation()
