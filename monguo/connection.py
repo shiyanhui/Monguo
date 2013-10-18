@@ -6,6 +6,8 @@ import pymongo
 from error import *
 
 class Connection(object):
+    '''Manager the connnections.'''
+
     DEFAULT_CONNECTION_NAME = 'default'
 
     _connections = {}
@@ -15,7 +17,11 @@ class Connection(object):
     @classmethod
     def connect(cls, db_name=None, connection_name=None, 
                 replica_set=False, *args, **kwargs):
+        '''Connect to MongoDB.
 
+        :Parameters:
+            
+        '''
         if db_name is not None and not isinstance(db_name, basestring):
             raise TypeError("Argument 'db_name' should be str type.")
 

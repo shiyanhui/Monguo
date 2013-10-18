@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+'''Monguo, an asynchronous MongoDB ORM for Tornado'''
+
 VERSION = (0, 1)
 
 def get_version():

@@ -1,22 +1,37 @@
-.. Monguo documentation master file, created by
-   sphinx-quickstart on Sat Oct  5 16:26:23 2013.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+Monguo: An asynchronous MongoDB ORM for Tornado
+=========================================================
 
-Welcome to Monguo's documentation!
-==================================
+.. image:: _static/monguo.jpg
 
-Contents:
+About
+-----
+
+Monguo is MongoDB ORM based on driver Motor_ which provides non-blocking access to MongoDB. The `source is on GitHub <https://github.com/shiyanhui/monguo>`_ and the docs are on `ReadTheDocs <http://motor.readthedocs.org/>`_.
+
+Install with::
+
+    $ pip install monguo
+
+You can open an issue on `GitHub <https://github.com/shiyanhui/monguo>`_ or email me directly at shiyanhui66@gmail.com if you have any question or feedback.
+
+.. _Tornado: http://tornadoweb.org/
+.. _Motor: https://github.com/mongodb/motor/
+
+Contents
+--------
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
+   features
+   installation
+   tutorial
+   examples/index
+   changelog
 
+Classes
+-------
 
-Indices and tables
-==================
+.. toctree::
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
+   api/index

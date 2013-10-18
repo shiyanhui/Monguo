@@ -20,9 +20,7 @@ Programming Language :: Python
 Programming Language :: Python :: Implementation :: CPython
 """
 
-description = 'asynchronous MongoDB ORM for Tornado'
-
-long_description = open("README.rst").read()
+description = 'Asynchronous MongoDB ORM for Tornado'
 
 packages = ['monguo']
 
@@ -30,7 +28,6 @@ setup(name='monguo',
     version='0.1',
     packages=packages,
     description=description,
-    long_description=long_description,
     author='Lime. Shi Yanhui',
     author_email='shiyanhui66@gmail.com',
     url='https://github.com/shiyanhui/monguo',
