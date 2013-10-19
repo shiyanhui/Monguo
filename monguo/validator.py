@@ -12,9 +12,18 @@ from field import *
 from error import *
 from connection import Connection
 
+__all__ = ['Validator']
 
 class Validator(object):
+    '''Validate the document before :meth:`~monguo.document.Document.insert`、:meth:`~monguo.document.Document.update` and :meth:`~monguo.document.Document.save`.
+     '''
+
     def __init__(self, document_cls, collection):
+        '''
+        :Parameters:
+            - `document_cls`: The related document class.
+            - `collection`: The related motor collection.
+        '''
         self.document_cls = document_cls
         self.motor_collection = collection
 
@@ -22,6 +31,13 @@ class Validator(object):
         self.collection = self.pymongo_db[collection.name]
 
     def __check_value(self, field, name, value):
+        '''Validate the value.
+
+        :Parameters:
+            - `field`: Field the value is assigned to.
+            - `name`: Name of the field in document.
+            - `value`: value to be validated.
+        '''
         value = field.validate(value)
         if (field.unique and not field.in_list 
                          and util.legal_variable_name(name)):
@@ -32,6 +48,12 @@ class Validator(object):
         return value
 
     def insert(self, doc_or_docs, **kwargs):
+        '''Validate when call Document.insert().
+
+        :Parameters:
+            - `doc_or_docs`: The doc or docs to be inserted.
+            - `**kwargs`: see :meth:`~motor.Collection.insert`
+        '''
         if not isinstance(doc_or_docs, (dict, list, tuple)):
             raise TypeError("Argument 'doc_or_docs' should be dict or list "
                             "type.")
@@ -58,6 +80,12 @@ class Validator(object):
         return args, kwargs
 
     def save(self, to_save, **kwargs):
+        '''Validate when call Document.save().
+
+        :Parameters:
+            - `to_save`: The doc or docs to be saved.
+            - `**kwargs`: see :meth:`~motor.Collection.save`
+        '''
         if not isinstance(to_save, dict):
             raise TypeError("Argument 'to_save' should be dict.")
 
@@ -73,6 +101,14 @@ class Validator(object):
         return args, kwargs
 
     def update(self, spec, document, upsert=False, **kwargs):
+        '''Validate when call Document.update().
+
+        :Parameters:
+            - `spec`: The query condition.
+            - `document`: The content to be updated.
+            - `upsert`: Perform an upsert if True. It only support `$setOnInsert` in `monguo`.
+            - `**kwargs`: see :meth:`~motor.Collection.update`
+        '''
         def check_key_in_operator_fields(key):
             '''Check whether the field name in '$set' is validated.'''
 

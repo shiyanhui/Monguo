@@ -11,4 +11,3 @@ Monguo API
     field
     document
     validator
-    error

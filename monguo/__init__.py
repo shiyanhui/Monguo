@@ -2,7 +2,7 @@
 
 '''Monguo, an asynchronous MongoDB ORM for Tornado'''
 
-VERSION = (0, 1, 'beta')
+VERSION = (0, 1, 1)
 
 def get_version():
     if isinstance(VERSION[-1], basestring):

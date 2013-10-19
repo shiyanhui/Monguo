@@ -14,9 +14,19 @@ from field import Field, DictField
 from connection import Connection
 from validator import Validator
 
+_all__ = ['BaseDocument', 'EmbeddedDocument', 'Document']
 
 class MonguoOperation(object):
+    '''The query operation. 
+
+    Each one corresponds to the same name method of motor.
+    '''
     def bound_method(self, monguo_method):
+        '''Bound monguo method to motor method.
+
+        :Parameters:
+            - `monguo_method`: The method to be bounded.
+        '''
         @classmethod
         def method(cls, *args, **kwargs):
             collection = cls.get_collection()
@@ -33,6 +43,8 @@ class MonguoOperation(object):
     
 
 class MonguoMeta(type):
+    '''Meta class of Document.'''
+
     def __new__(cls, name, bases, attrs):
         new_class = type.__new__(cls, name, bases, attrs)
 
@@ -53,8 +65,12 @@ class MonguoMeta(type):
 
 
 class BaseDocument(object):
+    '''The document base, not support query operations.'''
+
     @classmethod
     def fields_dict(cls):
+        '''Get all the Field instance attributes.'''
+
         fields = {}
         for name, attr in cls.__dict__.items():
             if isinstance(attr, Field):
@@ -63,6 +79,11 @@ class BaseDocument(object):
 
     @classmethod
     def validate_document(cls, document):
+        '''Validate the given document.
+
+        :Parameters:
+            - `document`: The document to be validated.
+        '''
         if not isinstance(document, dict):
             raise TypeError("Argument 'document' should be dict type.")
 
@@ -100,10 +121,14 @@ class BaseDocument(object):
 
    
 class EmbeddedDocument(BaseDocument):
+    '''The embedded document, not support query operations.'''
+
     pass  
 
 
 class Document(BaseDocument):
+    '''Document class, support query operations as motor can.'''
+
     __metaclass__     = MonguoMeta
     meta              = {}
     
@@ -134,12 +159,26 @@ class Document(BaseDocument):
 
     @classmethod
     def get_database_name(cls):
+        '''Get the database name related to `cls`.'''
+
         db_name = (cls.meta['db'] if 'db' in cls.meta else 
                    Connection.get_default_database_name())
         return db_name
 
     @classmethod
+    def get_collection_name(cls):
+        '''Get the collection name related to `cls`.'''
+
+        collection_name = (cls.meta['collection'] if 'collection' in cls.meta
+                           else util.camel_to_underline(cls.__name__))
+        return collection_name
+
+    @classmethod
     def get_database(cls):
+        '''
+        Get the database related to `cls`, it's an instance of :class:`~motor.MotorDatabase`.
+        '''
+
         connection_name = (cls.meta['connection'] if 'connection' in cls.meta
                            else None)
         db_name = cls.get_database_name()
@@ -147,19 +186,24 @@ class Document(BaseDocument):
         return db
 
     @classmethod
-    def get_collection_name(cls):
-        collection_name = (cls.meta['collection'] if 'collection' in cls.meta
-                           else util.camel_to_underline(cls.__name__))
-        return collection_name
-
-    @classmethod
     def get_collection(cls):
+        '''
+        Get the collection related to `cls`, it's an instance of :class:`~motor.MotorCollection`.
+        '''
+
         db= cls.get_database()
         collection_name = cls.get_collection_name()
         collection = db[collection_name]
         return collection
     
+    @classmethod
+    @gen.coroutine
     def translate_dbref(cls, dbref):
+        '''Get the document related with `dbref`.
+
+        :Parameters:
+            - `dbref`: The dbref to be translated.
+        '''
         if not isinstance(dbref, DBRef):
             raise TypeError("'%s' isn't DBRef type.")
 
@@ -174,13 +218,33 @@ class Document(BaseDocument):
         result = yield collection.find_one({'_id': ObjectId(dbref.id)})
         raise gen.Return(result)
 
+    @classmethod
+    @gen.coroutine
     def translate_dbref_in_document(cls, document):
+        '''Translate dbrefs in the specified `document`.
+
+        :Parameters:
+            - `document`: The specified document.
+        '''
+        if not isinstance(document, dict):
+            raise TypeError("Argument 'document' should be dict type.")
+
         for name, value in document.items():
             if isinstance(value, DBRef):
                 document[name] = yield cls.translate_dbref(value)
         raise gen.Return(document)
 
+    @classmethod
+    @gen.coroutine
     def translate_dbref_in_document_list(cls, document_list):
+        '''Translate dbrefs in the document list.
+
+        :Parameters:
+            - `document_list`: The specified document list.
+        '''
+        if not isinstance(document_list, (list, tuple)):
+            raise TypeError("Argument document_list should be list or tuple "
+                            "tpye.")
         for document in document_list:
             document = yield cls.translate_dbref_in_document(document)
         raise gen.Return(document_list)

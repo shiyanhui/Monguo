@@ -17,6 +17,8 @@ NOT_SUPPORT_ERROR  = "Operation %s is not supported."
 FIELD_VALUE_ERROR  = "Value '%s' is not %s."
 
 class MonguoBaseError(Exception):
+    '''Base Monguo error class.'''
+    
     def __init__(self, message=None):
         self.message = message
 

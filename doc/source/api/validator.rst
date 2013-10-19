@@ -1,10 +1,8 @@
-:mod:`connection` -- Connection to MongoDB
+:mod:`validator` -- Validate the document
 ==============================================================
 
-.. automodule:: monguo.connection
+.. automodule:: monguo.validator
 
-.. autoclass:: monguo.connection.Connection
+.. autoclass:: monguo.validator.Validator
   :members:
-
-cowo
 

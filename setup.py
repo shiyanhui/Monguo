@@ -6,6 +6,8 @@ except ImportError:
     use_setuptools()
     from setuptools import setup, Feature
 
+import monguo
+
 classifiers = """\
 Intended Audience :: Developers
 License :: OSI Approved :: Apache Software License
@@ -20,10 +22,9 @@ Programming Language :: Python
 Programming Language :: Python :: Implementation :: CPython
 """
 
+version = monguo.__version__
 description = 'Asynchronous MongoDB ORM for Tornado'
-
 long_description = open("README.rst").read()
-
 packages = ['monguo']
 
 setup(name='monguo',

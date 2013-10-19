@@ -1,8 +1,13 @@
-:mod:`connection` -- Collection level operations
-==============================================================
+:mod:`document` -- The ORM core
+================================
 
-.. automodule:: monguo.connection
+.. automodule:: monguo.document
 
-.. autoclass:: monguo.connection.Connection
-  :members:
+.. autoclass:: monguo.document.BaseDocument
+    :members:
 
+.. autoclass:: monguo.document.EmbeddedDocument
+    :members:
+
+.. autoclass:: monguo.document.Document
+    :members:

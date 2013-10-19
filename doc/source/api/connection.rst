@@ -3,6 +3,6 @@
 
 .. automodule:: monguo.connection
 
-    .. autoclass:: monguo.connection.Connection
-        :members:
+.. autoclass:: monguo.connection.Connection
+    :members:
 
