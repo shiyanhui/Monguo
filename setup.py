@@ -9,7 +9,7 @@ except ImportError:
 classifiers = """\
 Intended Audience :: Developers
 License :: OSI Approved :: Apache Software License
-Development Status :: 1 - Beta
+Development Status :: 4 - Beta
 Natural Language :: English
 Programming Language :: Python :: 2
 Programming Language :: Python :: 2.6

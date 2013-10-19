@@ -6,7 +6,7 @@ Monguo: An asynchronous MongoDB ORM for Tornado
 About
 -----
 
-Monguo is MongoDB ORM based on driver Motor_ which provides non-blocking access to MongoDB. The `source is on GitHub <https://github.com/shiyanhui/monguo>`_ and the docs are on `ReadTheDocs <http://motor.readthedocs.org/>`_.
+Monguo is an asynchronous MongoDB ORM based on driver. The `source is on GitHub <https://github.com/shiyanhui/monguo>`_ and the docs are on `ReadTheDocs <http://motor.readthedocs.org/>`_.
 
 Install with::
 

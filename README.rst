@@ -16,12 +16,12 @@ Monguo
 About
 =====
 
-Monguo is an asynchronous MongoDB ORM based on driver Motor_. The `source is on GitHub <https://github.com/shiyanhui/monguo>`_ and the docs are on `ReadTheDocs <http://motor.readthedocs.org/>`_.
+Monguo is an asynchronous MongoDB ORM based on driver Motor_. The `source is on GitHub <https://github.com/shiyanhui/monguo>`_ and the docs are on `ReadTheDocs <http://monguo.readthedocs.org/en/latest/>`_.
 
 Issues / Questions / Feedback
 =============================
 
-You can open an issue on `GitHub <https://github.com/shiyanhui/monguo>`_ or email me directly at shiyanhui66@gmail.com if you have any question or feedback.
+You can open an issue on `GitHub <https://github.com/shiyanhui/monguo/issues>`_ or email me directly at shiyanhui66@gmail.com if you have any question or feedback.
 
 Installation
 ============
@@ -135,7 +135,7 @@ at ReadTheDocs_.
 .. _Tornado: http://tornadoweb.org/
 .. _Motor: https://github.com/mongodb/motor/
 .. _Greenlet: http://pypi.python.org/pypi/greenlet/
-.. _ReadTheDocs: http://motor.readthedocs.org/
+.. _ReadTheDocs: http://monguo.readthedocs.org/en/latest/
 .. _sphinx: http://sphinx.pocoo.org/
 .. _nose: http://somethingaboutorange.com/mrl/projects/nose/
 .. _nose bug: https://github.com/nose-devs/nose/issues/556
