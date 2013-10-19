@@ -48,6 +48,9 @@ Additional dependencies are:
 Examples
 ========
 
+.. code-block:: python
+    :linenos:
+    
     class BookDocument(EmbeddedDocument):
         name  = StringField(required=True)
         pages = IntegerField(required=True)
