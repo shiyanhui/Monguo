@@ -74,7 +74,7 @@ Examples
         age    = IntegerField(required=True)
         skills = ListField(DictField(SkillDocument), required=True)
         book   = EmbeddedDocumentField(BookDocument, required=True)
-        pet = ReferenceField(PetDocument)
+        pet    = ReferenceField(PetDocument)
 
         meta = {
             'collection': 'user'
