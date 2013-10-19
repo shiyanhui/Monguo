@@ -16,7 +16,7 @@ Monguo
 About
 =====
 
-Monguo is MongoDB ORM based on driver Motor_ which provides non-blocking access to MongoDB. The `source is on GitHub <https://github.com/shiyanhui/monguo>`_ and the docs are on `ReadTheDocs <http://motor.readthedocs.org/>`_.
+Monguo is an asynchronous MongoDB ORM based on driver Motor_. The `source is on GitHub <https://github.com/shiyanhui/monguo>`_ and the docs are on `ReadTheDocs <http://motor.readthedocs.org/>`_.
 
 Issues / Questions / Feedback
 =============================
@@ -49,8 +49,7 @@ Examples
 ========
 
 .. code-block:: python
-    :linenos:
-    
+
     class BookDocument(EmbeddedDocument):
         name  = StringField(required=True)
         pages = IntegerField(required=True)
@@ -110,6 +109,17 @@ Examples
         print user
 
     IOLoop.instance().run_sync(main)
+
+The result:
+
+.. code-block:: python
+
+    {u'_id': ObjectId('526208447379180fcb0dec0a'), u'name': u'dog'}
+    
+    {u'name': u'Lime', u'skills': [{u'name': u'python'}, {u'name': u'Web Programming'}], u'age': 100L, u'sex': u'male', u'book': {u'name': u'I am a bad guy', u'pages': 888L}, u'_id': ObjectId('526208447379180fcb0dec0b')}
+    
+    {u'name': u'Lime', u'pet': DBRef(u'pet', ObjectId('526208447379180fcb0dec0a')), u'age': 100L, u'sex': u'male', u'skills': [{u'name': u'python'}, {u'name': u'Web Programming'}], u'book': {u'name': u'I am a bad guy', u'pages': 888L}, u'_id': ObjectId('526208447379180fcb0dec0b')}
+
 
 Documentation
 =============
