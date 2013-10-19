@@ -5,6 +5,8 @@ import pymongo
 
 from error import *
 
+__all__ = ['Connection']
+
 class Connection(object):
     '''Manager the connnections.'''
 
@@ -20,7 +22,13 @@ class Connection(object):
         '''Connect to MongoDB.
 
         :Parameters:
-            
+            - `db_name(optional)`: The name of database. You can set it 
+               through `~Connection.switch_database`.
+            - `connection_name(optional)`: It will use the default value 
+              `~Connection.DEFAULT_CONNECTION_NAME` if not set.
+            - `replica_set(optional)`: If true it will use 
+              `~motor.MotorReplicaSetClient` instead of `~motor.MotorClient`
+              to create a new connection. 
         '''
         if db_name is not None and not isinstance(db_name, basestring):
             raise TypeError("Argument 'db_name' should be str type.")
@@ -49,6 +57,12 @@ class Connection(object):
 
     @classmethod
     def disconnect(cls, connection_name=None):
+        '''Disconnect the connection.
+
+        :Parameters:
+            - `connection_name(optional)`: The connection name. If not set it 
+            will disconnect the current connection. 
+        '''
         if connection_name is None:
             connection_name = cls._default_connection
             cls._default_connection = None
@@ -60,6 +74,16 @@ class Connection(object):
 
     @classmethod
     def get_connection(cls, connection_name=None, pymongo=False):
+        '''Get a connection, return None if the specified connection hasn't
+           been created.
+
+        :Parameters:
+            - `connection_name(optional)`: The connection name. If not set it 
+              will return the current connection.
+            - `pymongo(optional)`: If true it will return an instance of 
+              `~pymongo.MongoClient` or `~pymongo.MongoReplicaSetClient` 
+              otherwise `~motor.MotorClient` or `~motor.MotorReplicaSetClient`.
+        '''
         if connection_name is None:
             connection_name = cls._default_connection
 
@@ -73,9 +97,21 @@ class Connection(object):
 
     @classmethod
     def get_database(cls, connection_name=None, db_name=None, pymongo=False):
+        '''Get a database. If the specified connection_name hasn't been 
+           created it will raise a ConnectionError.
+
+           :Parameters:
+               - `connection_name(optional)`: It will use the current 
+                 connection if not set.
+               - `db_name(optional)`: Return the current database if not set.
+               - `pymongo(optional)`: If true it will return an instance of 
+                 `~pymongo.MongoDatabase` otherwise `~motor.MotorDatabase`.
+
+        '''
         connection = cls.get_connection(connection_name, pymongo)
         if connection is None:
-            raise ConnectionError("Mongdb has not been connected!")
+            raise ConnectionError("'%s' hasn't been connected." %
+                                  connection_name)
 
         if db_name is None:
             db_name = cls._default_db
@@ -87,6 +123,8 @@ class Connection(object):
 
     @classmethod
     def get_default_database_name(cls):
+        '''Return the name of current database.'''
+
         if cls._default_db is None:  
             raise ConnectionError("Haven't connected to Mongdb.")
 
@@ -94,17 +132,27 @@ class Connection(object):
 
     @classmethod
     def switch_connection(cls, connection_name):
+        '''Switch to the specified connection.
+
+        :Parameters:
+            - `connection_name`: The connection you switch to.
+        '''
         if not isinstance(connection_name, basestring):
             raise TypeError("Argument 'connection_name' should be str type.")
             
         if connection_name not in cls._connections:
-            return False
+            raise ConnectionError("'%s' hasn't been connected." %
+                                  connection_name)
 
         cls._default_connection = connection_name
-        return True
 
     @classmethod
     def switch_database(cls, db_name):
+        '''Switch to the specified database.
+
+        :Parameters:
+            - `db_name`: The database you switch to.
+        '''
         if not isinstance(db_name, basestring):
             raise TypeError("Argument 'db_name' should be str type.")
 
