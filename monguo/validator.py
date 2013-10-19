@@ -32,17 +32,17 @@ class Validator(object):
         return value
 
     def insert(self, doc_or_docs, **kwargs):
-        from document import BaseDocument
-
         if not isinstance(doc_or_docs, (dict, list, tuple)):
             raise TypeError("Argument 'doc_or_docs' should be dict or list "
                             "type.")
 
+        one_doc = False
         if isinstance(doc_or_docs, dict):
+            one_doc = True
             doc_or_docs = [doc_or_docs]
 
         for index, doc in enumerate(doc_or_docs):
-            new_doc = BaseDocument.validate_document(self.document_cls, doc)
+            new_doc = self.document_cls.validate_document(doc)
             doc_or_docs[index] = new_doc
 
             for name, attr in self.document_cls.fields_dict().items():
@@ -50,6 +50,9 @@ class Validator(object):
                     result = self.collection.find_one({name: new_doc[name]})
                     if result:
                         raise UniqueError(field=name)
+
+        if one_doc:
+            doc_or_docs = doc_or_docs[0]
 
         args = [doc_or_docs]
         return args, kwargs

@@ -62,15 +62,12 @@ class BaseDocument(object):
         return fields
 
     @classmethod
-    def validate_document(cls, document_cls, document):
-        if not issubclass(document_cls, BaseDocument):
-            raise TypeError("Argument 'document_cls' should be Document type")
-
+    def validate_document(cls, document):
         if not isinstance(document, dict):
             raise TypeError("Argument 'document' should be dict type.")
 
         _document = {}
-        fields_dict = document_cls.fields_dict()
+        fields_dict = cls.fields_dict()
 
         for name, attr in document.items():
             if not util.legal_variable_name(name):
@@ -88,6 +85,7 @@ class BaseDocument(object):
             if (attr.required and not document.has_key(name) 
                               and attr.default is not None):
                 value = attr.default
+
             elif document.has_key(name):
                 value = document[name]
 
@@ -95,8 +93,9 @@ class BaseDocument(object):
                 if not isinstance(attr, DictField):
                     value = attr.validate(value)
                 else:
-                    value = cls.validate_document(attr.document, value)
-            _document[name] = value
+                    value = attr.document.validate_document(value)
+                _document[name] = value
+
         return _document
 
    

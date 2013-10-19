@@ -31,26 +31,82 @@ Installation
 Dependencies
 ============
 
-Motor works in all the environments officially supported by Tornado_. It
-requires:
+Monguo works in all the environments officially supported by Tornado_ and Motor_. It requires:
 
 * Unix, including Mac OS X. Microsoft Windows is not officially supported.
 * PyMongo_
-* Tornado_
 * Greenlet_
+* Tornado_ 3.0+ (temporarily)
+* Motor_ 0.1+ (temporarily)
 * CPython 2.6, 2.7, 3.2, or 3.3
 * PyPy 2.0 (greenlets were very slow in earlier PyPy versions)
 
 Additional dependencies are:
 
 - (to generate documentation) sphinx_
-- (to run tests) nose_
 
 Examples
 ========
 
-See the `examples on ReadTheDocs <https://motor.readthedocs.org/en/latest/examples/index.html>`_
-or `Chirp, a dumb Twitter clone <https://github.com/ajdavis/chirp>`_.
+    class BookDocument(EmbeddedDocument):
+        name  = StringField(required=True)
+        pages = IntegerField(required=True)
+
+
+    class SkillDocument(EmbeddedDocument):
+        name = StringField(required=True)
+
+
+    class PetDocument(Document):
+        name = StringField(required=True)
+        say  = StringField()
+
+        meta = {
+            'collection': 'pet'
+        }
+
+
+    class UserDocument(Document):
+        name   = StringField(required=True, unique=True)
+        sex    = StringField(required=True, default='male')
+        age    = IntegerField(required=True)
+        skills = ListField(DictField(SkillDocument), required=True)
+        book   = EmbeddedDocumentField(BookDocument, required=True)
+        pet = ReferenceField(PetDocument)
+
+        meta = {
+            'collection': 'user'
+        }
+
+        def insert_user():
+            user = {
+                'name': 'Lime',
+                'age': 100,
+                'skills': [{'name': 'python'}, {'name': 'Web Programming'}],
+                'book': {'name': 'I am a bad guy', 'pages': '888'},
+            }
+            user_id = yield UserDocument.save(user)
+            raise gen.Return(user_id)
+
+
+    @gen.coroutine
+    def main():
+        Connection.connect('test')
+
+        pet_id = yield PetDocument.insert({'name': 'dog'})
+        pet = yield PetDocument.find_one({'_id': ObjectId(pet_id)})
+        print pet
+
+        user_id = yield UserDocument.insert_user()
+        user = yield UserDocument.find_one({'name': 'Lime'})
+        print user
+
+        dbref = DBRef(PetDocument.meta['collection'], ObjectId(pet_id))
+        yield UserDocument.update({'name': 'Lime'}, {'$set': {'pet': dbref}})
+        user = yield UserDocument.find_one({'name': 'Lime'})
+        print user
+
+    IOLoop.instance().run_sync(main)
 
 Documentation
 =============
@@ -64,6 +120,7 @@ at ReadTheDocs_.
 .. _PyMongo: http://pypi.python.org/pypi/pymongo/
 .. _MongoDB: http://mongodb.org/
 .. _Tornado: http://tornadoweb.org/
+.. _Motor: https://github.com/mongodb/motor/
 .. _Greenlet: http://pypi.python.org/pypi/greenlet/
 .. _ReadTheDocs: http://motor.readthedocs.org/
 .. _sphinx: http://sphinx.pocoo.org/

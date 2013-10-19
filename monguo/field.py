@@ -5,12 +5,13 @@ import util
 
 from bson.dbref import DBRef
 from bson.binary import Binary
+from bson.objectid import ObjectId
 from error import *
 
 __all__ = ['Field', 'StringField', 'IntegerField', 'BooleanField',
            'FloatField', 'EmbeddedDocumentField', 'GenericDictField', 
            'DictField', 'GenericListField', 'ListField', 'EmailField',
-           'ReferenceField']
+           'ReferenceField', 'ObjectIdField']
 
 class Field(object):
     def __init__(self, required=False, default=None, unique=False, 
@@ -221,11 +222,10 @@ class DictField(GenericDictField):
         super(DictField, self).__init__(**kwargs)
 
     def validate(self, value):
-        from document import BaseDocument
         value = super(DictField, self).validate(value)
-        value = BaseDocument.validate_document(self.document, value)
+        value = self.document.validate_document(value)
 
-        for name, attr in self.document.fields_dict().item():
+        for name, attr in self.document.fields_dict().items():
             if attr.unique and not attr.in_list:
                 count = self.collection.find({name: value[name]}).count()
                 if count:
@@ -270,19 +270,15 @@ class ReferenceField(Field):
     def __init__(self, reference, **kwargs):
         from document import Document
         super(ReferenceField, self).__init__(**kwargs)
-        if not isinstance(reference, Document):
+        if not issubclass(reference, Document):
             raise TypeError("Argument 'reference' should be Document type in "
                             "ReferenceField.")
 
         self.reference = reference
 
     def check_type(self, value):
-        if self.strict and not isinstance(value, DBRef):
+        if not isinstance(value, DBRef):
             raise TypeError("Value '%s' isn't DBRef type." % value)
-        try:
-            value = DBRef(value)
-        except:
-            raise ValidateError("Cann't convert '%s' to DBRef." % value)
         return value
 
     def validate(self, value):
@@ -297,4 +293,17 @@ class ReferenceField(Field):
             raise ValidateError("Collection is different betwwen '%s' and '%s'"
                                 % (self.reference.get_collection_name, 
                                    value.collection))
+        return value
+
+class ObjectIdField(Field):
+    def check_type(self, value):
+        if self.strict and not isinstance(value, ObjectId):
+            raise TypeError("Value '%s' isn't ObjectId type." % value)
+        try:
+            value = ObjectId(value)
+        except:
+            raise ValidateError("Cann't convert '%s' to ObjectId." % value)
+
+    def validate(self, value): 
+        value = super(ObjectId, self).validate(value)
         return value
