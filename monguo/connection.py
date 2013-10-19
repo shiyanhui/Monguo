@@ -98,7 +98,8 @@ class Connection(object):
 
     @classmethod
     def get_database(cls, connection_name=None, db_name=None, pymongo=False):
-        '''Get a database. If the specified connection_name hasn't been created it will raise a ConnectionError.
+        '''Get a database. If the specified connection_name hasn't been 
+           created it will raise a ConnectionError.
 
            :Parameters:
                - `connection_name(optional)`: It will use the current 

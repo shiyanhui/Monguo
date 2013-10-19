@@ -176,7 +176,8 @@ class Document(BaseDocument):
     @classmethod
     def get_database(cls):
         '''
-        Get the database related to `cls`, it's an instance of :class:`~motor.MotorDatabase`.
+        Get the database related to `cls`, it's an instance of 
+        :class:`~motor.MotorDatabase`.
         '''
 
         connection_name = (cls.meta['connection'] if 'connection' in cls.meta
@@ -188,7 +189,8 @@ class Document(BaseDocument):
     @classmethod
     def get_collection(cls):
         '''
-        Get the collection related to `cls`, it's an instance of :class:`~motor.MotorCollection`.
+        Get the collection related to `cls`, it's an instance of 
+        :class:`~motor.MotorCollection`.
         '''
 
         db= cls.get_database()
