@@ -15,7 +15,11 @@ from connection import Connection
 __all__ = ['Validator']
 
 class Validator(object):
-    '''Validate the document before :meth:`~monguo.document.Document.insert`、:meth:`~monguo.document.Document.update` and :meth:`~monguo.document.Document.save`.
+    '''
+    Validate the document before 
+    :meth:`~monguo.document.Document.insert`, 
+    :meth:`~monguo.document.Document.update` and 
+    :meth:`~monguo.document.Document.save`.
      '''
 
     def __init__(self, document_cls, collection):
@@ -106,7 +110,8 @@ class Validator(object):
         :Parameters:
             - `spec`: The query condition.
             - `document`: The content to be updated.
-            - `upsert`: Perform an upsert if True. It only support `$setOnInsert` in `monguo`.
+            - `upsert`: Perform an upsert if True. It only support 
+              `$setOnInsert` in `monguo`.
             - `**kwargs`: see :meth:`~motor.Collection.update`
         '''
         def check_key_in_operator_fields(key):

@@ -20,11 +20,16 @@ class Field(object):
                  candidate=None, strict=False):
         '''
         :Parameters:
-            - `required(optional)`: If the field is required. Whether it has to have a value or not. Defaults to False.
-            - `default(optional)`: The default value for this field if no value has been set (or if the value has been unset).
-            - `unique(optional)`: Is the field value unique or not. Defaults to False.
+            - `required(optional)`: If the field is required. Whether it has 
+               to have a value or not. Defaults to False.
+            - `default(optional)`: The default value for this field if no
+               value has been set (or if the value has been unset).
+            - `unique(optional)`: Is the field value unique or not. Defaults
+               to False.
             - `candidate(optional)`: The value to be chose from.
-            - `strict(optional)`: Whether it is strict when validate the type. If true, the value only can be the specified type. For example, when assign to IntegerField, it can only be int or long type.
+            - `strict(optional)`: Whether it is strict when validate the type.
+              If true, the value only can be the specified type. For example,
+              when assign to IntegerField, it can only be int or long type.
         '''
         self.required = required
         self.default = default
@@ -288,7 +293,9 @@ class DictField(GenericDictField):
 EmbeddedDocumentField = DictField
 
 class GenericListField(Field):
-    '''Generic list field. You can pust any data in it and it wouldn't be validated.'''
+    '''Generic list field. You can pust any data in it and it wouldn't be
+       validated.
+    '''
 
     def check_type(self, value):
         if self.strict and not isinstance(value, (list, tuple)):
@@ -359,7 +366,7 @@ class ReferenceField(Field):
 
 class ObjectIdField(Field):
     '''An ObjectId field.'''
-    
+
     def check_type(self, value):
         if self.strict and not isinstance(value, ObjectId):
             raise TypeError("Value '%s' isn't ObjectId type." % value)
