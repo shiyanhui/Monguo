@@ -22,24 +22,26 @@ Programming Language :: Python :: Implementation :: CPython
 
 description = 'Asynchronous MongoDB ORM for Tornado'
 
+long_description = open("README.rst").read()
+
 packages = ['monguo']
 
 setup(name='monguo',
-    version='0.1',
+    version='0.1.1',
     packages=packages,
     description=description,
+    long_description=long_description,
     author='Lime. Shi Yanhui',
     author_email='shiyanhui66@gmail.com',
     url='https://github.com/shiyanhui/monguo',
     install_requires=[
-        'pymongo >= 2.6',
-        'tornado >= 3.1',
-        'greenlet >= 0.4.0',
+        'motor >= 0.1.2'
     ],
     license='http://www.apache.org/licenses/LICENSE-2.0',
     classifiers=filter(None, classifiers.split('\n')),
     keywords=[
-        "monguo", "mongo", "mongodb", "pymongo", "gridfs", "bson", "motor", "tornado",
+        "monguo", "mongo", "mongodb", "pymongo", "gridfs", "bson", "motor", 
+        "tornado", "ORM", "asynchronous"
     ],
     zip_safe=False,
 )
