@@ -6,9 +6,8 @@ from monguo.connection import Connection
 from monguo.error import *
 
 class ConnectionTest(AsyncTestCase):
-    @gen_test
     def test_connection(self):
-        # connect to MotorClient
+        # test connect(), get_connection(), get_database()...
         Connection.connect('monguo_test1')
         connection = Connection.get_connection()
         database = Connection.get_database()
@@ -44,11 +43,15 @@ class ConnectionTest(AsyncTestCase):
         db_name = Connection.get_default_database_name()
         self.assertEqual(db_name, 'monguo_test3')
 
-    @gen_test
     def test_disconnect(self):
         Connection.disconnect()
 
-        
+        connection_name_list = Connection.get_connection_name_list()
+        connection_name = Connection.get_default_connection_name()
+
+        self.assertEqual(['con'], connection_name_list)
+        self.assertEqual(connection_name, 'con')
+
 
 
 

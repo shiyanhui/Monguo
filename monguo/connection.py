@@ -73,10 +73,11 @@ class Connection(object):
                 cls._connections.pop(index)
                 break
 
-        if cls._connections:
-            cls._default_connection = cls._connections[0].keys()[0]
-        else:            
-            cls._default_connection = None
+        if connection_name == cls._default_connection:
+            if cls._connections:
+                cls._default_connection = cls._connections[0].keys()[0]
+            else:            
+                cls._default_connection = None
 
     @classmethod
     def get_connection(cls, connection_name=None, pymongo=False):
