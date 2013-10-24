@@ -12,7 +12,7 @@ class Connection(object):
 
     DEFAULT_CONNECTION_NAME = 'default'
 
-    _connections = {}
+    _connections = []
     _default_connection = None
     _default_db = None
 
@@ -39,8 +39,6 @@ class Connection(object):
         if not isinstance(connection_name, basestring):
             raise TypeError("Argument 'connection_name' should be str type.")
 
-        cls.disconnect(connection_name)
-
         client_class = (motor.MotorReplicaSetClient if replica_set else
                         motor.MotorClient)
         try:
@@ -49,8 +47,10 @@ class Connection(object):
         except Exception, e:
             raise ConnectionError("Cant't connect to mongdb.")
 
-        cls._connections[connection_name] = (motor_connection,
-                                             pymongo_connection)
+
+        cls.disconnect(connection_name)
+        cls._connections.insert(0, {connection_name: 
+                                    (motor_connection, pymongo_connection)})
 
         cls._default_connection = connection_name
         cls._default_db = db_name
@@ -65,12 +65,18 @@ class Connection(object):
         '''
         if connection_name is None:
             connection_name = cls._default_connection
-            cls._default_connection = None
 
-        if connection_name in cls._connections:
-            for connection in cls._connections[connection_name]:
-                connection.close()
-            del cls._connections[connection_name]
+        for index, connection in enumerate(cls._connections):
+            if connection_name in connection.keys():
+                for item in connection[connection_name]:
+                    item.close()
+                cls._connections.pop(index)
+                break
+
+        if cls._connections:
+            cls._default_connection = cls._connections[0].keys()[0]
+        else:            
+            cls._default_connection = None
 
     @classmethod
     def get_connection(cls, connection_name=None, pymongo=False):
@@ -88,13 +94,10 @@ class Connection(object):
         if connection_name is None:
             connection_name = cls._default_connection
 
-        if connection_name not in cls._connections:
-            return None
-
-        if pymongo:
-            return cls._connections[connection_name][1]
-
-        return cls._connections[connection_name][0]
+        for connection in cls._connections:
+            if connection_name in connection.keys():
+                return connection[connection_name][1 if pymongo else 0]                 
+        return None
 
     @classmethod
     def get_database(cls, connection_name=None, db_name=None, pymongo=False):
@@ -128,9 +131,24 @@ class Connection(object):
         '''Return the name of current database.'''
 
         if cls._default_db is None:  
-            raise ConnectionError("Haven't connected to Mongdb.")
+            raise ConnectionError("Haven't set default database.")
 
         return cls._default_db
+
+    @classmethod
+    def get_default_connection_name(cls):
+        '''Return the name of current connection.'''
+
+        if cls._default_connection is None:
+            raise ConnectionError("Haven't connected to Mongdb")
+
+        return cls._default_connection
+
+    @classmethod
+    def get_connection_name_list(cls):
+        '''Return the connections' names.'''
+
+        return [connection.keys()[0] for connection in cls._connections]
 
     @classmethod
     def switch_connection(cls, connection_name):
@@ -142,7 +160,7 @@ class Connection(object):
         if not isinstance(connection_name, basestring):
             raise TypeError("Argument 'connection_name' should be str type.")
             
-        if connection_name not in cls._connections:
+        if connection_name not in cls.get_connection_name_list():
             raise ConnectionError("'%s' hasn't been connected." %
                                   connection_name)
 
