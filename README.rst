@@ -34,12 +34,8 @@ Dependencies
 Monguo works in all the environments officially supported by Tornado_ and Motor_. It requires:
 
 * Unix, including Mac OS X. Microsoft Windows is not officially supported.
-* PyMongo_
-* Greenlet_
 * Tornado_ 3.0+ (temporarily)
 * Motor_ 0.1+ (temporarily)
-* CPython 2.6, 2.7, 3.2, or 3.3
-* PyPy 2.0 (greenlets were very slow in earlier PyPy versions)
 
 Additional dependencies are:
 
@@ -49,76 +45,75 @@ Examples
 ========
 
 .. code-block:: python
-
-    class BookDocument(EmbeddedDocument):
-        name  = StringField(required=True)
-        pages = IntegerField(required=True)
-
-
-    class SkillDocument(EmbeddedDocument):
-        name = StringField(required=True)
-
-
-    class PetDocument(Document):
-        name = StringField(required=True)
-        say  = StringField()
-
-        meta = {
-            'collection': 'pet'
-        }
-
-
+    
     class UserDocument(Document):
-        name   = StringField(required=True, unique=True)
-        sex    = StringField(required=True, default='male')
-        age    = IntegerField(required=True)
-        skills = ListField(DictField(SkillDocument), required=True)
-        book   = EmbeddedDocumentField(BookDocument, required=True)
-        pet    = ReferenceField(PetDocument)
-
+        name  = StringField(required=True, unique=True, max_length=20)
+        email = EmailField(required=True)
+        age   = IntegerField()
+        sex   = StringField(required=True, default='male', 
+                                           candidate=['male', 'female'])
         meta = {
             'collection': 'user'
         }
 
-        def insert_user():
-            user = {
-                'name': 'Lime',
-                'age': 100,
-                'skills': [{'name': 'python'}, {'name': 'Web Programming'}],
-                'book': {'name': 'I am a bad guy', 'pages': '888'},
-            }
-            user_id = yield UserDocument.save(user)
-            raise gen.Return(user_id)
+        def get_user_list(skip=10, limit=5):
+            result = yield UserDocument.find().to_list(limit)
+            raise gen.Return(result)
 
 
-    @gen.coroutine
-    def main():
-        Connection.connect('test')
+    class CommentDocument(EmbeddedDocument):
+        commentor = ReferenceField(UserDocument, required=True)
+        contents  = StringField(required=True, max_length=200)
 
-        pet_id = yield PetDocument.insert({'name': 'dog'})
-        pet = yield PetDocument.find_one({'_id': ObjectId(pet_id)})
-        print pet
 
-        user_id = yield UserDocument.insert_user()
-        user = yield UserDocument.find_one({'name': 'Lime'})
-        print user
+    class PostDocument(Document):
+        author       = ReferenceField(UserDocument, required=True)
+        publish_time = DateTimeField(required=True)
+        title        = StringField(required=True, max_length=100)
+        contents     = StringField(max_length=5000)
+        comments     = ListField(EmbeddedDocumentField(CommentDocument))
 
-        dbref = DBRef(PetDocument.meta['collection'], ObjectId(pet_id))
-        yield UserDocument.update({'name': 'Lime'}, {'$set': {'pet': dbref}})
-        user = yield UserDocument.find_one({'name': 'Lime'})
-        print user
+        meta = {
+            'collection': 'post'
+        }
 
-    IOLoop.instance().run_sync(main)
+    # connect to database
+    Connection.connect('test')
 
-The result:
+    # insert
+    bob_id = yield UserDocument.insert({
+        'name': 'Bob',
+        'email': 'bob@gmail.com',
+        'age': 19
+    })
 
-.. code-block:: python
+    alice_id = yield UserDocument.insert({
+        'name': 'Alice',
+        'email': 'alice@gmail.com',
+        'sex': 'female',
+        'age': 18
+    })
 
-    {u'_id': ObjectId('526208447379180fcb0dec0a'), u'name': u'dog'}
+    post_id = yield PostDocument.insert({
+        'author': DBRef(UserDocument.meta['collection'], bob_id),
+        'publish_time': datetime.now(),
+        'title': 'title',
+    })
     
-    {u'name': u'Lime', u'skills': [{u'name': u'python'}, {u'name': u'Web Programming'}], u'age': 100L, u'sex': u'male', u'book': {u'name': u'I am a bad guy', u'pages': 888L}, u'_id': ObjectId('526208447379180fcb0dec0b')}
-    
-    {u'name': u'Lime', u'pet': DBRef(u'pet', ObjectId('526208447379180fcb0dec0a')), u'age': 100L, u'sex': u'male', u'skills': [{u'name': u'python'}, {u'name': u'Web Programming'}], u'book': {u'name': u'I am a bad guy', u'pages': 888L}, u'_id': ObjectId('526208447379180fcb0dec0b')}
+    # update
+    comment = {
+        'commentor': DBRef(UserDocument.meta['collection'], alice_id),
+        'contents': 'I am comments.'
+    }
+    yield PostDocument.update({'_id': post_id}, 
+                              {'$push': {'comments': comment}})
+
+    # query
+    user = yield UserDocument.find_one({'name': 'Bob'})
+    posts = yield PostDocument.find().to_list(5)
+
+    # higher API
+    user_list = yield UserDocument.get_user_list()
 
 
 Documentation
@@ -130,11 +125,9 @@ can be found in ``doc/build/html/``. You can read the current docs
 at ReadTheDocs_.
 
 
-.. _PyMongo: http://pypi.python.org/pypi/pymongo/
 .. _MongoDB: http://mongodb.org/
 .. _Tornado: http://tornadoweb.org/
 .. _Motor: https://github.com/mongodb/motor/
-.. _Greenlet: http://pypi.python.org/pypi/greenlet/
 .. _ReadTheDocs: http://monguo.readthedocs.org/en/latest/
 .. _sphinx: http://sphinx.pocoo.org/
 .. _nose: http://somethingaboutorange.com/mrl/projects/nose/

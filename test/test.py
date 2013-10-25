@@ -22,10 +22,8 @@ class UserDocument(Document):
         'collection': 'user'
     }
 
-    @classmethod
-    @gen.coroutine
-    def get_user_list(cls, skip=10, limit=5):
-        result = yield cls.find().to_list(limit)
+    def get_user_list(skip=10, limit=5):
+        result = yield UserDocument.find().to_list(limit)
         raise gen.Return(result)
 
 
@@ -44,7 +42,6 @@ class PostDocument(Document):
     meta = {
         'collection': 'post'
     }
-
 
 @gen.coroutine
 def test():

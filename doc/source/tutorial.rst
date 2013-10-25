@@ -202,7 +202,7 @@ You can also write `get_user_list` like this if you dislike decorators
         }
 
         def get_user_list(skip=10, limit=5):
-            result = cls.find().skip(skip).limit(limit).to_list(limit)
+            result = UserDocument.find().skip(skip).limit(limit).to_list(limit)
 
             raise gen.Return(result)
 
