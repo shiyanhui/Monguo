@@ -8,8 +8,11 @@ About
 
 Monguo is an asynchronous MongoDB ORM based on driver. The `source is on GitHub <https://github.com/shiyanhui/monguo>`_ and the docs are on `ReadTheDocs <http://motor.readthedocs.org/>`_.
 
-Install with::
+Install with:
 
+.. code-block:: bash
+
+    $ pip install git+https://github.com/mongodb/motor.git
     $ pip install monguo
 
 You can open an issue on `GitHub <https://github.com/shiyanhui/monguo>`_ or email me directly at shiyanhui66@gmail.com if you have any question or feedback.

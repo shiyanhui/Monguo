@@ -4,7 +4,7 @@ Installation
 Installation
 ------------
 
-Install Monguo from PyPI_ with pip_::
+Install Monguo from PyPI_ with pip_:
 
 .. code-block:: bash
 
