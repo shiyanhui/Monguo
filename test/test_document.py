@@ -1,10 +1,16 @@
 # -*- coding: utf-8 -*-
 
-from motor import MotorClient, MotorDatabase, MotorReplicaSetClient
+import unittest
+import pymongo
+import motor
+
 from tornado.testing import AsyncTestCase, gen_test
+from tornado import gen
 from monguo.connection import Connection
 from monguo.document import Document, EmbeddedDocument
 from monguo.field import *
+
+from test import MotorTest
 
 class BookDocument(EmbeddedDocument):
     name  = StringField(required=True)
@@ -37,7 +43,7 @@ class UserDocument(Document):
     }
 
 
-class DocumentTest(AsyncTestCase):
+class DocumentTest(MotorTest):
     def setUp(self):
         super(DocumentTest, self).setUp()
         Connection.connect('monguo_test')
@@ -54,12 +60,14 @@ class DocumentTest(AsyncTestCase):
             'skills': [{'name': 'python'}, {'name': 'Web Programming'}],
             'book': {'name': 'I am a bad guy', 'pages': '888'},
         }
-        user_id = yield UserDocument.insert(user)
-
+        
     def test_save(self):
         pass
 
     def test_update(self):
         pass
         
+
+if __name__ == '__main__':
+    unittest.main()
     
