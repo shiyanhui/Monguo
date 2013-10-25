@@ -26,6 +26,8 @@ You can open an issue on `GitHub <https://github.com/shiyanhui/monguo/issues>`_ 
 Installation
 ============
     
+.. code-block:: bash
+
     $ pip install git+https://github.com/mongodb/motor.git
     $ pip install monguo
 
