@@ -21,7 +21,7 @@ matrix:
     - python: "3.2"
       env: FUTURES=yes
 before_script:
-  - if [[ "$FUTURES" == "yes" ]]; then pip install futures; fi
+  - if [[ "$FUTURES" == "yes" ]]; then sudo pip install futures; fi
 
 branches:
   only:
