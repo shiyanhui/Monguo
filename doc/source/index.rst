@@ -26,8 +26,6 @@ Contents
    features
    installation
    tutorial
-   examples/index
-   changelog
 
 Classes
 -------
