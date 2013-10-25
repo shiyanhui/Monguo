@@ -6,6 +6,8 @@ Installation
 
 Install Monguo from PyPI_ with pip_::
 
+.. code-block:: bash
+
     $ pip install git+https://github.com/mongodb/motor.git
     $ pip install monguo
 
