@@ -85,7 +85,7 @@ The `CommentDocument` will be embedded in `PostDocument`.
 
 .. code-block:: python
 
-    class CommentDocument(EmbeddedDocument)
+    class CommentDocument(EmbeddedDocument):
         commentor = ReferenceField(UserDocument, required=True)
         contents  = StringField(required=True, max_length=200)
 
@@ -132,12 +132,12 @@ Update
 .. code-block:: python
 
     comment = {
-        'commentor': DBRef(UserDocument.meta['collection'], alice_id)
+        'commentor': DBRef(UserDocument.meta['collection'], alice_id),
         'contents': 'I am comments.'
     }
 
     yield PostDocument.update({'_id': post_id}, 
-                              {'$push': {'comments': comment})
+                              {'$push': {'comments': comment}})
 
 Query
 -----
@@ -146,7 +146,7 @@ Query
 .. code-block:: python
 
     user = yield UserDocument.find_one({'name': 'Bob'})
-    posts = yield PostDocument.find().skip(10).limit(5).to_list(5)
+    posts = yield PostDocument.find().to_list(5)
 
 You can regard `Document` and your defined documents as 
 `motor.MotorCollection`. It's equal to:
@@ -157,7 +157,7 @@ You can regard `Document` and your defined documents as
     user = yield collection.find_one({'name': 'Bob'})
 
     collection = PostDocument.get_collection()
-    posts = yield collection.find().skip(10).limit(5).to_list(5)
+    posts = yield collection.find().to_list(5)
 
 Defining higher API
 -------------------

@@ -3,6 +3,7 @@
 import re
 import util
 
+from datetime import datetime, date, time
 from bson.dbref import DBRef
 from bson.binary import Binary
 from bson.objectid import ObjectId
@@ -11,7 +12,7 @@ from error import *
 __all__ = ['Field', 'StringField', 'IntegerField', 'BooleanField',
            'FloatField', 'EmbeddedDocumentField', 'GenericDictField', 
            'DictField', 'GenericListField', 'ListField', 'EmailField',
-           'ReferenceField', 'ObjectIdField']
+           'ReferenceField', 'ObjectIdField', 'DateTimeField']
 
 class Field(object):
     '''Base field class.'''
@@ -244,7 +245,7 @@ class EmailField(StringField):
         value = super(EmailField, self).validate(value)
         if not EmailField.EMAIL_REGEX.match(value):
             raise ValidateError("'%s' is not email format." % value)
-
+        return value
 
 class GenericDictField(Field):
     '''Generic dict field. You can pust any data in it and it wouldn't be validated.'''
@@ -323,11 +324,9 @@ class ListField(GenericListField):
     
     def validate(self, value): 
         value = super(ListField, self).validate(value)
-
         for index, item in enumerate(value[::]):
             value[index] = self.field.validate(item)
         return value
-
 
 class ReferenceField(Field):
     '''The reference field.'''
@@ -375,6 +374,27 @@ class ObjectIdField(Field):
         except:
             raise ValidateError("Cann't convert '%s' to ObjectId." % value)
 
+        return value
+
     def validate(self, value): 
         value = super(ObjectId, self).validate(value)
+        return value
+
+class DateTimeField(Field):
+    '''And datetime field.'''
+
+    def check_type(self, value):
+        if self.strict and not isinstance(value, datetime):
+            raise TypeError("Value '%s' isn't datetime type." % value)
+
+        if not isinstance(value, (datetime, date)):
+            raise TypeError("Value '%s' should be datetime or date type." 
+                            % value)
+
+        if isinstance(value, date):
+            value = datetime(value.year, value.month, value.day)
+        return value
+
+    def validate(self, value):
+        value = super(DateTimeField, self).validate(value)
         return value

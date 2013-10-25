@@ -138,7 +138,7 @@ class Validator(object):
 
         def pre_deal(operator, value):
             if operator == '$set': 
-                value = [value]
+                value = {'value': value}
 
             elif operator == '$addToSet':
                 if isinstance(value, dict) and '$each' in value:
@@ -150,18 +150,21 @@ class Validator(object):
                     if not isinstance(value, (list, tuple)):
                         raise TypeError("Value of '$each' should be list or "
                                         "tuple type.")
+                    value = {'value': value, 'each': True}
                 else:
-                    value = [value]
+                    value = {'value': [value], 'each': False}
 
             elif operator == '$inc':
                 if not util.isnum(value):
                     raise ValueError("Value in '$inc' must be number.")
-                value = [value]
+                value = {'value': value}
 
             elif operator == '$pushAll':
                 if not isinstance(value, (list, tuple)):
                     raise TypeError("Value in '$pushAll' should be list or "
                                     "tuple.")
+                value = {'value': value}
+
             elif operator == '$push':
                 if isinstance(value, dict) and '$each' in value:
                     if len(value.items()) > 1:
@@ -172,8 +175,9 @@ class Validator(object):
                     if not isinstance(value, (list, tuple)):
                         raise TypeError("Value of '$each' should be list or "
                                         "tuple type.")
+                    value = {'value': value, 'each': True}
                 else:
-                    value = [value]
+                    value = {'value': [value], 'each': False}
 
             elif operator == '$bit':
                 if not isinstance(value, dict):
@@ -191,8 +195,7 @@ class Validator(object):
                 if not isinstance(value[key], (int, long)):
                     raise TypeError("Value in '$bit' should be int or long "
                                     "type.")
-
-                value = [value[key]]
+                value = {'value': value[key]}
             return value
 
         def post_deal(operator, attr, name, value):
@@ -288,11 +291,19 @@ class Validator(object):
                                 post_deal(operator, current_attr, 
                                           name_without_dollar, value)
 
-                                for item in value:
-                                    result = self.__check_value(current_attr,
-                                                        name_without_dollar,
-                                                        item)
+                                result = self.__check_value(current_attr,
+                                                           name_without_dollar,
+                                                           value['value'])
+                                if value.has_key('each'):
+                                    if value['each']:
+                                        (document[operator][original_name]
+                                                           ['$each']) = result
+                                    else:
+                                        (document[operator]
+                                                 [original_name]) = result[0]
+                                else:    
                                     document[operator][original_name] = result
+
                             
                     else:
                         if index != len(name_list) - 1:
@@ -329,10 +340,17 @@ class Validator(object):
                                 post_deal(operator, current_attr, 
                                           name_without_dollar, value)
 
-                                for item in value:
-                                    result = self.__check_value(current_attr,
-                                                        name_without_dollar,
-                                                        item)
+                                result = self.__check_value(current_attr,
+                                                           name_without_dollar,
+                                                           value['value'])
+                                if value.has_key('each'):
+                                    if value['each']:
+                                        (document[operator][original_name]
+                                                           ['$each']) = result
+                                    else:
+                                        (document[operator]
+                                                 [original_name]) = result[0]
+                                else:    
                                     document[operator][original_name] = result
 
 
