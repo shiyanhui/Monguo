@@ -25,8 +25,9 @@ You can open an issue on `GitHub <https://github.com/shiyanhui/monguo/issues>`_ 
 
 Installation
 ============
-
-  $ pip install monguo
+    
+    $ pip install git+https://github.com/mongodb/motor.git
+    $ pip install monguo
 
 Dependencies
 ============

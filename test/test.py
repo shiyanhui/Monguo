@@ -6,9 +6,9 @@ from bson.dbref import DBRef
 from tornado import gen
 from tornado.ioloop import IOLoop
 
-from document import Document, EmbeddedDocument
-from connection import Connection
-from field import *
+from monguo.document import Document, EmbeddedDocument
+from monguo.connection import Connection
+from monguo.field import *
 
 
 class UserDocument(Document):
@@ -47,6 +47,8 @@ class PostDocument(Document):
 def test():
     Connection.connect('test')
 
+    yield UserDocument.remove()
+    
     bob_id = yield UserDocument.insert({
         'name': 'Bob',
         'email': 'bob@gmail.com',

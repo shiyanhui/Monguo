@@ -6,18 +6,16 @@ Installation
 
 Install Monguo from PyPI_ with pip_::
 
-  $ pip install monguo
+    $ pip install git+https://github.com/mongodb/motor.git
+    $ pip install monguo
 
 Pip automatically installs Montuo's prerequisite packages, Motor_ PyMongo_, Greenlet_, and Tornado_.
 
 Prerequisites
 -------------
 
-* CPython 2.6, 2.7, or 3.3
-* Motor_ 0.1.2+
-* PyMongo_ 2.5.1 or later
+* Motor_ 0.1+
 * Tornado_ 3.0+
-* Greenlet_
 
 Generating the docs_ requires Sphinx_.
 

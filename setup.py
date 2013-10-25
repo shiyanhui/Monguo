@@ -28,16 +28,14 @@ long_description = open("README.rst").read()
 packages = ['monguo']
 
 setup(name='monguo',
-    version='0.1.1',
+    version='0.1.2',
     packages=packages,
     description=description,
     long_description=long_description,
     author='Lime. Shi Yanhui',
     author_email='shiyanhui66@gmail.com',
     url='https://github.com/shiyanhui/monguo',
-    install_requires=[
-        'motor >= 0.1.2'
-    ],
+    install_requires=[],
     license='http://www.apache.org/licenses/LICENSE-2.0',
     classifiers=filter(None, classifiers.split('\n')),
     keywords=[
