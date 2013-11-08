@@ -3,7 +3,7 @@
 # @Author: lime
 # @Date:   2013-11-06 08:28:04
 # @Last Modified by:   lime
-# @Last Modified time: 2013-11-08 09:17:38
+# @Last Modified time: 2013-11-08 14:44:42
 
 import sys
 import inspect
@@ -13,7 +13,8 @@ import util
 import abc
 
 from tornado import gen
-from bson.son import SON
+from bson.dbref import DBRef
+from bson.objectid import ObjectId
 from connection import Connection
 from error import *
 from field import *
@@ -193,10 +194,6 @@ class Document(BaseDocument):
 
     
     @classmethod
-    def __subclasshook__(cls, subclass):
-        DocumentManager.register(subclass, subclass)
-
-    @classmethod
     def get_database_name(cls):
         '''Get the database name related to `cls`.'''
 
@@ -290,4 +287,10 @@ class Document(BaseDocument):
             document = yield cls.translate_dbref_in_document(document)
         raise gen.Return(document_list)
 
-
+    @classmethod
+    @gen.coroutine
+    def to_list(cls, cursor):
+        resut = []
+        while (yield cursor.fetch_next):
+            resut.append(cursor.next_object())
+        raise gen.Return(resut)

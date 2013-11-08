@@ -3,7 +3,7 @@
 # @Author: lime
 # @Date:   2013-11-06 08:17:20
 # @Last Modified by:   lime
-# @Last Modified time: 2013-11-08 09:39:54
+# @Last Modified time: 2013-11-08 10:02:31
 
 import re
 import util
@@ -237,7 +237,7 @@ class BooleanField(Field):
             raise ValidateError("Cann't convert '%s' to bool." % value)
         return  value
 
-    def validate( self ):
+    def validate(self, value):
         value = super(BooleanField, self).validate(value)
         return value
 
