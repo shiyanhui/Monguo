@@ -1,4 +1,9 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# @Author: lime
+# @Date:   2013-11-06 08:28:10
+# @Last Modified by:   lime
+# @Last Modified time: 2013-11-07 14:49:29
 
 __all__ = ['ConnectionError', 'AssignmentError', 'RequiredError', 
            'UniqueError', 'CandidateError', 'UndefinedFieldError',

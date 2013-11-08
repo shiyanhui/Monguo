@@ -1,20 +1,28 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# @Author: lime
+# @Date:   2013-11-06 08:28:04
+# @Last Modified by:   lime
+# @Last Modified time: 2013-11-08 09:17:38
 
 import sys
 import inspect
 import motor
 import types
 import util
+import abc
 
 from tornado import gen
 from bson.son import SON
 from connection import Connection
 from error import *
-from field import Field, DictField
+from field import *
 from connection import Connection
 from validator import Validator
 
-_all__ = ['BaseDocument', 'EmbeddedDocument', 'Document']
+
+__all__ = ['BaseDocument', 'EmbeddedDocument', 'Document']
+
 
 class MonguoOperation(object):
     '''The query operation. 
@@ -41,6 +49,30 @@ class MonguoOperation(object):
             return motor_method(*args, **kwargs)
         return method
     
+class DocumentManager(object):
+    '''Manage document'''
+
+    registered_document = []
+
+    @classmethod
+    def register(cls, _file, document):
+        _ = {'file': _file, 'document': document}
+        if _ not in cls.registered_document:
+            cls.registered_document.append(_)
+
+    @classmethod
+    def unregister(cls, _file, document):
+        _ = {'file': _file, 'document': name}
+        if _ not in cls.registered_document:
+            cls.registered_document.remove(_)
+
+    @classmethod
+    def get(cls, _file, name):
+        for document in cls.registered_document:
+            if (_file == document['file'] and 
+                    name == document['document'].__name__):
+                return document['document']
+        return None
 
 class MonguoMeta(type):
     '''Meta class of Document.'''
@@ -61,6 +93,8 @@ class MonguoMeta(type):
                 elif isinstance(attr, types.FunctionType):
                     new_attr = staticmethod(gen.coroutine(attr))
                     setattr(new_class, name, new_attr)
+        
+        DocumentManager.register(new_class.__module__, new_class)
         return new_class
 
 
@@ -157,6 +191,11 @@ class Document(BaseDocument):
     uuid_subtype      = MonguoOperation()
     full_name         = MonguoOperation()
 
+    
+    @classmethod
+    def __subclasshook__(cls, subclass):
+        DocumentManager.register(subclass, subclass)
+
     @classmethod
     def get_database_name(cls):
         '''Get the database name related to `cls`.'''
@@ -250,4 +289,5 @@ class Document(BaseDocument):
         for document in document_list:
             document = yield cls.translate_dbref_in_document(document)
         raise gen.Return(document_list)
-      
+
+

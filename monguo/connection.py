@@ -1,4 +1,9 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# @Author: lime
+# @Date:   2013-11-06 08:27:52
+# @Last Modified by:   lime
+# @Last Modified time: 2013-11-07 14:48:22
 
 import motor
 import pymongo

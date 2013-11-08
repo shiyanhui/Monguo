@@ -1,4 +1,10 @@
-# Don't force people to install distribute unless we have to.
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# @Author: lime
+# @Date:   2013-11-07 14:45:40
+# @Last Modified by:   lime
+# @Last Modified time: 2013-11-07 20:36:18
+
 try:
     from setuptools import setup, Feature
 except ImportError:
@@ -16,6 +22,9 @@ Natural Language :: English
 Programming Language :: Python :: 2
 Programming Language :: Python :: 2.6
 Programming Language :: Python :: 2.7
+Programming Language :: Python :: 3
+Programming Language :: Python :: 3.0
+Programming Language :: Python :: 3.3
 Operating System :: MacOS :: MacOS X
 Operating System :: Unix
 Programming Language :: Python
@@ -28,11 +37,11 @@ long_description = open("README.rst").read()
 packages = ['monguo']
 
 setup(name='monguo',
-    version='0.1.2',
+    version=version,
     packages=packages,
     description=description,
     long_description=long_description,
-    author='Lime. Shi Yanhui',
+    author='Lime YH.Shi',
     author_email='shiyanhui66@gmail.com',
     url='https://github.com/shiyanhui/monguo',
     install_requires=[],

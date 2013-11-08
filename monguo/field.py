@@ -1,7 +1,15 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# @Author: lime
+# @Date:   2013-11-06 08:17:20
+# @Last Modified by:   lime
+# @Last Modified time: 2013-11-08 09:39:54
 
 import re
 import util
+import inspect
+import sys
+import os
 
 from datetime import datetime, date, time
 from bson.dbref import DBRef
@@ -12,7 +20,8 @@ from error import *
 __all__ = ['Field', 'StringField', 'IntegerField', 'BooleanField',
            'FloatField', 'EmbeddedDocumentField', 'GenericDictField', 
            'DictField', 'GenericListField', 'ListField', 'EmailField',
-           'ReferenceField', 'ObjectIdField', 'DateTimeField']
+           'ReferenceField', 'ObjectIdField', 'DateTimeField', 'DateField',
+           'TimeField', 'BinaryField']
 
 class Field(object):
     '''Base field class.'''
@@ -182,7 +191,7 @@ class FloatField(Field):
             - `min_value(optional)`: The min value of the field.
             - `max_value(optional)`: The max value of the field.
         '''
-        super(IntField, self).__init__(**kwargs)
+        super(FloatField, self).__init__(**kwargs)
         if (min_value is not None and 
                          not isinstance(min_value, (int, long, float))):
             raise TypeError("Argument 'min_value' should be number.")
@@ -311,6 +320,7 @@ class GenericListField(Field):
         value = super(GenericListField, self).validate(value)
         return value
 
+
 class ListField(GenericListField):
     '''A list field. It can only hold one type of field in it.'''
 
@@ -328,6 +338,7 @@ class ListField(GenericListField):
             value[index] = self.field.validate(item)
         return value
 
+
 class ReferenceField(Field):
     '''The reference field.'''
 
@@ -336,13 +347,27 @@ class ReferenceField(Field):
         :Parameters:
             - `reference`: The document class referenced to.
         '''
-        from document import Document
+
+        self.reference = reference
         super(ReferenceField, self).__init__(**kwargs)
-        if not issubclass(reference, Document):
+
+    def get_reference(self, reference):
+        self.reference = None
+        from document import Document, DocumentManager
+        if isinstance(reference, basestring):
+            stack = inspect.stack()
+            for _ in stack:
+                if _[1] is not None:
+                    reference = DocumentManager.get(_[1], reference)
+                    if reference is not None:
+                        self.reference = reference
+
+        elif not issubclass(reference, Document):
             raise TypeError("Argument 'reference' should be Document type in "
                             "ReferenceField.")
 
-        self.reference = reference
+        if self.reference is None:
+            raise Exception("Couldn't find %s" % reference)
 
     def check_type(self, value):
         if not isinstance(value, DBRef):
@@ -350,6 +375,8 @@ class ReferenceField(Field):
         return value
 
     def validate(self, value):
+        self.reference = self.get_reference(self.reference)
+
         value = super(ReferenceField, self).validate(value)
         if (value.database is not None and 
                 self.reference.get_database_name() != value.database):
@@ -362,6 +389,7 @@ class ReferenceField(Field):
                                 % (self.reference.get_collection_name, 
                                    value.collection))
         return value
+
 
 class ObjectIdField(Field):
     '''An ObjectId field.'''
@@ -381,11 +409,11 @@ class ObjectIdField(Field):
         return value
 
 class DateTimeField(Field):
-    '''And datetime field.'''
+    '''An `datetime.datetime` field.'''
 
     def check_type(self, value):
         if self.strict and not isinstance(value, datetime):
-            raise TypeError("Value '%s' isn't datetime type." % value)
+            raise TypeError("Value '%s' isn't datetime.datetime type." % value)
 
         if not isinstance(value, (datetime, date)):
             raise TypeError("Value '%s' should be datetime or date type." 
@@ -397,4 +425,49 @@ class DateTimeField(Field):
 
     def validate(self, value):
         value = super(DateTimeField, self).validate(value)
+        return value
+
+class DateField(Field):
+    '''An `datetime.date` field'''
+
+    def check_type(self, value):
+        if not isinstance(value, date):
+            raise TypeError("Value '%s' isn't datetime.date type" % value)
+
+        return value
+
+    def validate(self, value):
+        value = super(DateField, self).validate(value)
+        return value
+
+class TimeField(Field):
+    '''An `datetime.time` field'''
+
+    def check_type(self, value):
+        if not isinstance(value, time):
+            raise TypeError("Value '%s' isn't datetime.time type" % value)
+
+        return value
+
+    def validate(self, value):
+        value = super(TimeField, self).validate(value)
+        return value
+
+class BinaryField(Field):
+    '''Binary Field'''
+
+    def check_type(self, value):
+        if self.strict and not isinstance(value, Binary):
+            raise TypeError("Value '%s' isn't Binary type." % value)
+
+        if not isinstance(value, Binary):
+            try:
+                value = Binary(value)
+            except:
+                raise ValidateError("Cann't convert '%s' to Binary." % value)
+
+        return value
+
+    def validate(self, value):
+        value = super(BinaryField, self).validate(value)
         return value
