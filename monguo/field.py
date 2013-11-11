@@ -3,7 +3,7 @@
 # @Author: lime
 # @Date:   2013-11-06 08:17:20
 # @Last Modified by:   lime
-# @Last Modified time: 2013-11-08 10:02:31
+# @Last Modified time: 2013-11-11 16:08:59
 
 import re
 import util
@@ -342,7 +342,7 @@ class ListField(GenericListField):
 class ReferenceField(Field):
     '''The reference field.'''
 
-    def __init__(self, reference, **kwargs):
+    def __init__(self, reference=None, **kwargs):
         '''
         :Parameters:
             - `reference`: The document class referenced to.
@@ -352,22 +352,34 @@ class ReferenceField(Field):
         super(ReferenceField, self).__init__(**kwargs)
 
     def get_reference(self, reference):
-        self.reference = None
         from document import Document, DocumentManager
+
+        if reference is None:
+            return None
+
+        result = None
         if isinstance(reference, basestring):
             stack = inspect.stack()
             for _ in stack:
                 if _[1] is not None:
                     reference = DocumentManager.get(_[1], reference)
                     if reference is not None:
-                        self.reference = reference
+                        result = reference
+                    else:
+                        sys.path.insert(0, os.path.dirname(_[1]))
+                        module = '%s.%s' % (os.path.basename(_[1]), reference)
+                        try:
+                            reference = __import__(module)
+                            result = reference
+                        except ImportError:
+                            pass
+        elif issubclass(reference, Document):
+            result = reference
 
-        elif not issubclass(reference, Document):
-            raise TypeError("Argument 'reference' should be Document type in "
-                            "ReferenceField.")
-
-        if self.reference is None:
+        if result is None:
             raise Exception("Couldn't find %s" % reference)
+
+        return result
 
     def check_type(self, value):
         if not isinstance(value, DBRef):
@@ -378,16 +390,18 @@ class ReferenceField(Field):
         self.reference = self.get_reference(self.reference)
 
         value = super(ReferenceField, self).validate(value)
-        if (value.database is not None and 
-                self.reference.get_database_name() != value.database):
-            raise ValidateError("Database is different betwwen '%s' and '%s'" %
-                                (self.reference.get_database_name(), 
-                                 value.database))
 
-        if value.collection != self.reference.get_collection_name():
-            raise ValidateError("Collection is different betwwen '%s' and '%s'"
-                                % (self.reference.get_collection_name, 
-                                   value.collection))
+        if self.reference is not None:
+            if (value.database is not None and 
+                    self.reference.get_database_name() != value.database):
+                raise ValidateError("Database is different betwwen '%s' and "
+                                    "'%s'" % (self.reference.get_database_name(
+                                    ), value.database))
+
+            if value.collection != self.reference.get_collection_name():
+                raise ValidateError("Collection is different betwwen '%s' and "
+                                    "'%s'" % (self.reference.
+                                    get_collection_name, value.collection))
         return value
 
 
