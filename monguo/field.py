@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # @Author: lime
-# @Date:   2013-11-06 08:17:20
+# @Date:   2013-10-25 19:45:09
 # @Last Modified by:   lime
-# @Last Modified time: 2013-11-11 16:08:59
+# @Last Modified time: 2013-11-11 20:22:26
 
 import re
 import util
 import inspect
 import sys
 import os
+import imp
 
 from datetime import datetime, date, time
 from bson.dbref import DBRef
@@ -352,27 +353,29 @@ class ReferenceField(Field):
         super(ReferenceField, self).__init__(**kwargs)
 
     def get_reference(self, reference):
-        from document import Document, DocumentManager
+        from document import Document
 
         if reference is None:
-            return None
+            return reference
 
         result = None
         if isinstance(reference, basestring):
             stack = inspect.stack()
             for _ in stack:
                 if _[1] is not None:
-                    reference = DocumentManager.get(_[1], reference)
-                    if reference is not None:
-                        result = reference
-                    else:
-                        sys.path.insert(0, os.path.dirname(_[1]))
-                        module = '%s.%s' % (os.path.basename(_[1]), reference)
-                        try:
-                            reference = __import__(module)
-                            result = reference
-                        except ImportError:
-                            pass
+                    name = inspect.getmodulename(_[1])
+                    _ = imp.find_module(name, [os.path.dirname(_[1])])
+                    fp, _ = _[0], _[1:] 
+                    try:
+                        module = imp.load_module(name, fp, *_)
+                        result = getattr(module, reference)
+                        break
+                    except:
+                        pass
+                    finally:
+                        if fp:
+                            fp.close()
+                    
         elif issubclass(reference, Document):
             result = reference
 
@@ -426,15 +429,9 @@ class DateTimeField(Field):
     '''An `datetime.datetime` field.'''
 
     def check_type(self, value):
-        if self.strict and not isinstance(value, datetime):
-            raise TypeError("Value '%s' isn't datetime.datetime type." % value)
-
-        if not isinstance(value, (datetime, date)):
-            raise TypeError("Value '%s' should be datetime or date type." 
+        if not isinstance(value, datetime):
+            raise TypeError("Value '%s' should be datetime.datetime." 
                             % value)
-
-        if isinstance(value, date):
-            value = datetime(value.year, value.month, value.day)
         return value
 
     def validate(self, value):

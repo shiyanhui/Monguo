@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # @Author: lime
-# @Date:   2013-11-06 08:28:04
+# @Date:   2013-10-25 19:45:09
 # @Last Modified by:   lime
-# @Last Modified time: 2013-11-08 14:44:42
+# @Last Modified time: 2013-11-11 20:21:51
+
 
 import sys
 import inspect
@@ -50,31 +51,6 @@ class MonguoOperation(object):
             return motor_method(*args, **kwargs)
         return method
     
-class DocumentManager(object):
-    '''Manage document'''
-
-    registered_document = []
-
-    @classmethod
-    def register(cls, _file, document):
-        _ = {'file': _file, 'document': document}
-        if _ not in cls.registered_document:
-            cls.registered_document.append(_)
-
-    @classmethod
-    def unregister(cls, _file, document):
-        _ = {'file': _file, 'document': name}
-        if _ not in cls.registered_document:
-            cls.registered_document.remove(_)
-
-    @classmethod
-    def get(cls, _file, name):
-        for document in cls.registered_document:
-            if (_file == document['file'] and 
-                    name == document['document'].__name__):
-                return document['document']
-        return None
-
 class MonguoMeta(type):
     '''Meta class of Document.'''
 
@@ -95,7 +71,6 @@ class MonguoMeta(type):
                     new_attr = staticmethod(gen.coroutine(attr))
                     setattr(new_class, name, new_attr)
         
-        DocumentManager.register(new_class.__module__, new_class)
         return new_class
 
 
