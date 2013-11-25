@@ -3,7 +3,7 @@
 # @Author: lime
 # @Date:   2013-11-07 14:45:40
 # @Last Modified by:   lime
-# @Last Modified time: 2013-11-07 20:36:18
+# @Last Modified time: 2013-11-25 11:08:49
 
 try:
     from setuptools import setup, Feature
@@ -17,7 +17,7 @@ import monguo
 classifiers = """\
 Intended Audience :: Developers
 License :: OSI Approved :: Apache Software License
-Development Status :: 4 - Beta
+Development Status :: 5 - Production/Stable
 Natural Language :: English
 Programming Language :: Python :: 2
 Programming Language :: Python :: 2.6
