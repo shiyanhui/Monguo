@@ -3,8 +3,7 @@
 # @Author: lime
 # @Date:   2013-10-25 19:45:09
 # @Last Modified by:   lime
-# @Last Modified time: 2013-11-11 20:21:51
-
+# @Last Modified time: 2013-11-27 11:28:04
 
 import sys
 import inspect
@@ -132,7 +131,6 @@ class BaseDocument(object):
    
 class EmbeddedDocument(BaseDocument):
     '''The embedded document, not support query operations.'''
-
     pass  
 
 
@@ -185,26 +183,30 @@ class Document(BaseDocument):
         return collection_name
 
     @classmethod
-    def get_database(cls):
+    def get_database(cls, pymongo=False):
         '''
-        Get the database related to `cls`, it's an instance of 
-        :class:`~motor.MotorDatabase`.
+        Get the database related to `cls`, it's an instance of :class:`~motor.MotorDatabase`.
+
+        :Parameters:
+            - `pymongo`: Return pymongo.database if True.
         '''
 
         connection_name = (cls.meta['connection'] if 'connection' in cls.meta
                            else None)
         db_name = cls.get_database_name()
-        db = Connection.get_database(connection_name, db_name)
+        db = Connection.get_database(connection_name, db_name, pymongo)
         return db
 
     @classmethod
-    def get_collection(cls):
+    def get_collection(cls, pymongo=False):
         '''
-        Get the collection related to `cls`, it's an instance of 
-        :class:`~motor.MotorCollection`.
+        Get the collection related to `cls`, it's an instance of :class:`~motor.MotorCollection`.
+
+        :Parameters:
+            - `pymongo`: Return pymongo.collection if True.
         '''
 
-        db= cls.get_database()
+        db= cls.get_database(pymongo)
         collection_name = cls.get_collection_name()
         collection = db[collection_name]
         return collection
