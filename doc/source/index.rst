@@ -1,5 +1,5 @@
-Monguo: An asynchronous MongoDB ORM for Tornado
-=========================================================
+Monguo: Asynchronous MongoDB ORM for Tornado
+============================================
 
 .. image:: _static/monguo.jpg
 
