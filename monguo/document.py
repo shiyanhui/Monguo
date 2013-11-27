@@ -3,7 +3,7 @@
 # @Author: lime
 # @Date:   2013-10-25 19:45:09
 # @Last Modified by:   lime
-# @Last Modified time: 2013-11-27 11:28:04
+# @Last Modified time: 2013-11-27 11:51:29
 
 import sys
 import inspect
@@ -135,7 +135,7 @@ class EmbeddedDocument(BaseDocument):
 
 
 class Document(BaseDocument):
-    '''Document class, support query operations as motor can.'''
+    '''The ORM core, supports `all the query operations of motor <http://motor.readthedocs.org/en/stable/api/motor_collection.html>`_.'''
 
     __metaclass__     = MonguoMeta
     meta              = {}
