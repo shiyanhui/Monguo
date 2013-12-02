@@ -3,7 +3,7 @@
 # @Author: lime
 # @Date:   2013-10-25 19:45:09
 # @Last Modified by:   lime
-# @Last Modified time: 2013-11-11 20:22:26
+# @Last Modified time: 2013-11-27 15:30:18
 
 import re
 import util
@@ -11,6 +11,7 @@ import inspect
 import sys
 import os
 import imp
+import cPickle as pickle
 
 from datetime import datetime, date, time
 from bson.dbref import DBRef
@@ -31,16 +32,11 @@ class Field(object):
                  candidate=None, strict=False):
         '''
         :Parameters:
-            - `required(optional)`: If the field is required. Whether it has 
-               to have a value or not. Defaults to False.
-            - `default(optional)`: The default value for this field if no
-               value has been set (or if the value has been unset).
-            - `unique(optional)`: Is the field value unique or not. Defaults
-               to False.
+            - `required(optional)`: If the field is required. Whether it has to have a value or not. Defaults to False.
+            - `default(optional)`: The default value for this field if no value has been set (or if the value has been unset).
+            - `unique(optional)`: Is the field value unique or not. Defaultsto False.
             - `candidate(optional)`: The value to be chose from.
-            - `strict(optional)`: Whether it is strict when validate the type.
-              If true, the value only can be the specified type. For example,
-              when assign to IntegerField, it can only be int or long type.
+            - `strict(optional)`: Whether it is strict when validate the type. If true, the value only can be the specified type. For example, when assign to IntegerField, it can only be int or long type.
         '''
         self.required = required
         self.default = default
