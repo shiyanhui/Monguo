@@ -3,7 +3,7 @@
 # @Author: lime
 # @Date:   2013-10-25 19:45:09
 # @Last Modified by:   lime
-# @Last Modified time: 2013-11-27 11:54:44
+# @Last Modified time: 2013-12-02 22:02:54
 
 import motor
 import pymongo
@@ -40,18 +40,20 @@ class Connection(object):
         if not isinstance(connection_name, basestring):
             raise TypeError("Argument 'connection_name' should be str type.")
 
-        client_class = (motor.MotorReplicaSetClient if replica_set else
-                        motor.MotorClient)
-        try:
-            motor_connection = client_class(*args, **kwargs).open_sync()
-            pymongo_connection = motor_connection.sync_client()
-        except Exception, e:
-            raise ConnectionError("Cant't connect to mongdb.")
 
+        if replica_set:
+            motor_client = motor.MotorReplicaSetClient
+            pymongo_client = pymongo.MongoReplicaSetClient
+        else:
+            motor_client = motor.MotorClient
+            pymongo_client = pymongo.MongoClient
+
+        motor_connection = motor_client(*args, **kwargs)
+        pymongo_connection = pymongo_client(*args, **kwargs)
 
         cls.disconnect(connection_name)
-        cls._connections.insert(0, {connection_name: 
-                                    (motor_connection, pymongo_connection)})
+        cls._connections.insert(
+            0, {connection_name: (motor_connection, pymongo_connection)})
 
         cls._default_connection = connection_name
         cls._default_db = db_name
@@ -107,8 +109,8 @@ class Connection(object):
         '''
         connection = cls.get_connection(connection_name, pymongo)
         if connection is None:
-            raise ConnectionError("'%s' hasn't been connected." %
-                                  connection_name)
+            raise ConnectionError(
+                "'%s' hasn't been connected." % connection_name)
 
         if db_name is None:
             db_name = cls._default_db
@@ -153,8 +155,8 @@ class Connection(object):
             raise TypeError("Argument 'connection_name' should be str type.")
             
         if connection_name not in cls.get_connection_name_list():
-            raise ConnectionError("'%s' hasn't been connected." %
-                                  connection_name)
+            raise ConnectionError(
+                "'%s' hasn't been connected." % connection_name)
 
         cls._default_connection = connection_name
 
