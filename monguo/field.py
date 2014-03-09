@@ -3,7 +3,7 @@
 # @Author: lime
 # @Date:   2013-10-25 19:45:09
 # @Last Modified by:   lime
-# @Last Modified time: 2013-11-27 15:30:18
+# @Last Modified time: 2014-03-09 15:24:28
 
 import re
 import util
@@ -23,7 +23,7 @@ __all__ = ['Field', 'StringField', 'IntegerField', 'BooleanField',
            'FloatField', 'EmbeddedDocumentField', 'GenericDictField', 
            'DictField', 'GenericListField', 'ListField', 'EmailField',
            'ReferenceField', 'ObjectIdField', 'DateTimeField', 'DateField',
-           'TimeField', 'BinaryField']
+           'TimeField', 'BinaryField', 'LocationField']
 
 class Field(object):
     '''Base field class.'''
@@ -32,11 +32,15 @@ class Field(object):
                  candidate=None, strict=False):
         '''
         :Parameters:
-            - `required(optional)`: If the field is required. Whether it has to have a value or not. Defaults to False.
-            - `default(optional)`: The default value for this field if no value has been set (or if the value has been unset).
-            - `unique(optional)`: Is the field value unique or not. Defaultsto False.
-            - `candidate(optional)`: The value to be chose from.
-            - `strict(optional)`: Whether it is strict when validate the type. If true, the value only can be the specified type. For example, when assign to IntegerField, it can only be int or long type.
+          - `required(optional)`: If the field is required. Whether it has to 
+            have a value or not. Defaults to False.
+          - `default(optional)`: The default value for this field if no value 
+            has been set (or if the value has been unset).
+          - `unique(optional)`: Is the field value unique or not. Defaultsto False.
+          - `candidate(optional)`: The value to be chose from.
+          - `strict(optional)`: Whether it is strict when validate the type. 
+            If true, the value only can be the specified type. For example, when 
+            assign to IntegerField, it can only be int or long type.
         '''
         self.required = required
         self.default = default
@@ -58,7 +62,7 @@ class Field(object):
 
             if self.default is not None and self.default not in self.candidate:
                 raise ValueError("default value '%s' isn't in candidate %s" % 
-                                 (self.default, self.candidate))
+                    (self.default, self.candidate))
 
     @property
     def in_list(self):
@@ -91,13 +95,14 @@ class StringField(Field):
     '''A unicode string field.'''
 
     def __init__(self, regex=None, min_length=None, max_length=None, **kwargs):
-        super(StringField, self).__init__(**kwargs)
         '''
         :Parameters:
-            - `regex(optional)`: The regex to to be matched.
-            - `min_length(optional)`: The min length of the string.
-            - `max_length(optional)`: The max length of the string. 
+          - `regex(optional)`: The regex to to be matched.
+          - `min_length(optional)`: The min length of the string.
+          - `max_length(optional)`: The max length of the string. 
         '''
+
+        super(StringField, self).__init__(**kwargs)
 
         if regex is not None and not isinstance(regex, basestring):
             raise TypeError("Argument 'regex' should be string value.")
@@ -140,12 +145,13 @@ class IntegerField(Field):
     '''A int or long field.'''
 
     def __init__(self, min_value=None, max_value=None, **kwargs):
-        super(IntegerField, self).__init__(**kwargs)
         '''
         :Parameters:
-            - `min_value(optional)`: The min value of the field.
-            - `max_value(optional)`: The max value of the field.
+          - `min_value(optional)`: The min value of the field.
+          - `max_value(optional)`: The max value of the field.
         '''
+        super(IntegerField, self).__init__(**kwargs)
+
         if (min_value is not None and 
                          not isinstance(min_value, (int, long, float))):
             raise TypeError("Argument 'min_value' should be integer value.")
@@ -162,20 +168,19 @@ class IntegerField(Field):
         try:
             value = long(value)
         except Exception, e:
-            raise ValidateError("'%s' cann't be converted to int value." %
-                                value)
+            raise ValidateError("'%s' cann't be converted to int value." % value)
         return value
 
     def validate(self, value):
         value = super(IntegerField, self).validate(value)
 
         if self.min_value is not None and value < self.min_value:
-            raise ValidateError("'%s' is smaller than %s." % 
-                                (value, self.min_value))
+            raise ValidateError(
+                "'%s' is smaller than %s." % (value, self.min_value))
 
         if self.max_value is not None and value > self.max_value:
-            raise ValidateError("'%s' is larger than %s." % 
-                                (self.value, self.max_value ))
+            raise ValidateError(
+                "'%s' is larger than %s." % (self.value, self.max_value ))
         return value
 
 
@@ -185,12 +190,13 @@ class FloatField(Field):
     def __init__(self, min_value=None, max_value=None, **kwargs):
         '''
         :Parameters:
-            - `min_value(optional)`: The min value of the field.
-            - `max_value(optional)`: The max value of the field.
+          - `min_value(optional)`: The min value of the field.
+          - `max_value(optional)`: The max value of the field.
         '''
         super(FloatField, self).__init__(**kwargs)
+        
         if (min_value is not None and 
-                         not isinstance(min_value, (int, long, float))):
+                not isinstance(min_value, (int, long, float))):
             raise TypeError("Argument 'min_value' should be number.")
 
         if max_value is not None and not isinstance(max_value, (int, long)):
@@ -202,11 +208,12 @@ class FloatField(Field):
     def check_type(self, value):
         if self.strict and not isinstance(value, float):
             raise TypeError("'%s' is not float type." % value)
+        
         try:
             value = long(value)
         except Exception, e:
-            raise ValidateError("'%s' cann't be converted to int value." % 
-                                value)
+            raise ValidateError("'%s' cann't be converted to int value." % value)
+
         return value
 
     def validate(self, value):
@@ -254,7 +261,10 @@ class EmailField(StringField):
         return value
 
 class GenericDictField(Field):
-    '''Generic dict field. You can pust any data in it and it wouldn't be validated.'''
+    '''
+    Generic dict field. You can pust any data in it and it wouldn't be 
+    validated.
+    '''
 
     def check_type(self, value):
         if self.strict and not isinstance(value, dict):
@@ -275,12 +285,12 @@ class DictField(GenericDictField):
     def __init__(self, document, **kwargs):
         '''
         :Parameters:
-            - `document`: The embedded document class.
+          - `document`: The embedded document class.
         '''
         from document import EmbeddedDocument
         if not issubclass(document, EmbeddedDocument):
-            raise TypeError("Argument 'embedded_doc' should be "
-                            "EmbeddedDocument type.")
+            raise TypeError(
+                "Argument 'embedded_doc' should be EmbeddedDocument type.")
 
         self.document = document
         super(DictField, self).__init__(**kwargs)
@@ -300,8 +310,8 @@ class DictField(GenericDictField):
 EmbeddedDocumentField = DictField
 
 class GenericListField(Field):
-    '''Generic list field. You can pust any data in it and it wouldn't be
-       validated.
+    '''
+    Generic list field. You can pust any data in it and it wouldn't be validated.
     '''
 
     def check_type(self, value):
@@ -323,8 +333,8 @@ class ListField(GenericListField):
 
     def __init__(self, field, **kwargs):
         if not isinstance(field, Field):
-            raise ValueError("Argument field of ListField should be Field"
-                             "type.")
+            raise ValueError("Argument field of ListField should be Field type.")
+
         self.field = field
         self.field.in_list = True
         super(ListField, self).__init__(**kwargs)
@@ -342,7 +352,7 @@ class ReferenceField(Field):
     def __init__(self, reference=None, **kwargs):
         '''
         :Parameters:
-            - `reference`: The document class referenced to.
+          - `reference`: The document class referenced to.
         '''
 
         self.reference = reference
@@ -393,14 +403,15 @@ class ReferenceField(Field):
         if self.reference is not None:
             if (value.database is not None and 
                     self.reference.get_database_name() != value.database):
-                raise ValidateError("Database is different betwwen '%s' and "
-                                    "'%s'" % (self.reference.get_database_name(
-                                    ), value.database))
+                raise ValidateError(
+                    "Database is different betwwen '%s' and '%s'" % (
+                    self.reference.get_database_name(), value.database))
 
             if value.collection != self.reference.get_collection_name():
-                raise ValidateError("Collection is different betwwen '%s' and "
-                                    "'%s'" % (self.reference.
-                                    get_collection_name, value.collection))
+                raise ValidateError(
+                    "Collection is different betwwen '%s' and '%s'" % (
+                    self.reference.get_collection_name(), value.collection))
+
         return value
 
 
@@ -421,18 +432,20 @@ class ObjectIdField(Field):
         value = super(ObjectId, self).validate(value)
         return value
 
+
 class DateTimeField(Field):
     '''An `datetime.datetime` field.'''
 
     def check_type(self, value):
         if not isinstance(value, datetime):
-            raise TypeError("Value '%s' should be datetime.datetime." 
-                            % value)
+            raise TypeError("Value '%s' should be datetime.datetime." % value)
+
         return value
 
     def validate(self, value):
         value = super(DateTimeField, self).validate(value)
         return value
+
 
 class DateField(Field):
     '''An `datetime.date` field'''
@@ -460,6 +473,7 @@ class TimeField(Field):
         value = super(TimeField, self).validate(value)
         return value
 
+
 class BinaryField(Field):
     '''Binary Field'''
 
@@ -477,4 +491,35 @@ class BinaryField(Field):
 
     def validate(self, value):
         value = super(BinaryField, self).validate(value)
+        return value
+
+
+class LocationField(Field):
+    '''
+    Location(longitude, latitude) field, the value should be something like (x, y)
+    or [x, y], in which both x and y are float`.
+    '''
+
+    def check_type(self, value):
+        if not isinstance(value, (tuple, list)):
+            raise TypeError("Value '%s' should be tuple or list", value)
+
+        if len(value) != 2:
+            raise ValidateError(
+                "LocationField should be something like (x, y) or [x, y]")
+
+        result = []
+        for item in value:
+            try:
+                _ = float(item)
+            except:
+                raise ValidateError(
+                    "Can't translate %s to float in %s" % (item, value))
+
+            result.append(_)
+
+        return result
+
+    def validate(self, value):
+        value = super(LocationField, self).validate(value)
         return value

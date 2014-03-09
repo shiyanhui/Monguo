@@ -3,7 +3,7 @@
 # @Author: lime
 # @Date:   2013-10-25 19:45:09
 # @Last Modified by:   lime
-# @Last Modified time: 2013-11-27 11:17:26
+# @Last Modified time: 2014-03-09 15:16:10
 
 import re
 import types
@@ -21,17 +21,15 @@ __all__ = ['Validator']
 
 class Validator(object):
     '''
-    Validate the document before 
-    :meth:`~monguo.document.Document.insert`, 
-    :meth:`~monguo.document.Document.update` and 
-    :meth:`~monguo.document.Document.save`.
-     '''
+    Validate the document before :meth:`~monguo.document.Document.insert`, 
+    :meth:`~monguo.document.Document.update` and :meth:`~monguo.document.Document.save`.
+    '''
 
     def __init__(self, document_cls, collection):
         '''
         :Parameters:
-            - `document_cls`: The related document class.
-            - `collection`: The related motor collection.
+          - `document_cls`: The related document class.
+          - `collection`: The related motor collection.
         '''
         self.document_cls = document_cls
         self.motor_collection = collection
@@ -43,13 +41,13 @@ class Validator(object):
         '''Validate the value.
 
         :Parameters:
-            - `field`: Field the value is assigned to.
-            - `name`: Name of the field in document.
-            - `value`: value to be validated.
+          - `field`: Field the value is assigned to.
+          - `name`: Name of the field in document.
+          - `value`: value to be validated.
         '''
         value = field.validate(value)
         if (field.unique and not field.in_list 
-                         and util.legal_variable_name(name)):
+                and util.legal_variable_name(name)):
             count = self.collection.find({name: value}).count()
             if count:
                 raise UniqueError(field=name)
@@ -60,12 +58,11 @@ class Validator(object):
         '''Validate when call Document.insert().
 
         :Parameters:
-            - `doc_or_docs`: The doc or docs to be inserted.
-            - `**kwargs`: see :meth:`~motor.Collection.insert`
+          - `doc_or_docs`: The doc or docs to be inserted.
+          - `**kwargs`: see :meth:`~motor.Collection.insert`
         '''
         if not isinstance(doc_or_docs, (dict, list, tuple)):
-            raise TypeError("Argument 'doc_or_docs' should be dict or list "
-                            "type.")
+            raise TypeError("Argument 'doc_or_docs' should be dict or list type.")
 
         one_doc = False
         if isinstance(doc_or_docs, dict):
@@ -92,8 +89,8 @@ class Validator(object):
         '''Validate when call Document.save().
 
         :Parameters:
-            - `to_save`: The doc or docs to be saved.
-            - `**kwargs`: see :meth:`~motor.Collection.save`
+          - `to_save`: The doc or docs to be saved.
+          - `**kwargs`: see :meth:`~motor.Collection.save`
         '''
         if not isinstance(to_save, dict):
             raise TypeError("Argument 'to_save' should be dict.")
@@ -113,11 +110,11 @@ class Validator(object):
         '''Validate when call Document.update().
 
         :Parameters:
-            - `spec`: The query condition.
-            - `document`: The content to be updated.
-            - `upsert`: Perform an upsert if True. It only support 
-              `$setOnInsert` in `monguo`.
-            - `**kwargs`: see :meth:`~motor.Collection.update`
+          - `spec`: The query condition.
+          - `document`: The content to be updated.
+          - `upsert`: Perform an upsert if True. It only support `$setOnInsert` 
+            in `monguo`.
+          - `**kwargs`: see :meth:`~motor.Collection.update`
         '''
         def check_key_in_operator_fields(key):
             '''Check whether the field name in '$set' is validated.'''
@@ -125,8 +122,7 @@ class Validator(object):
             name_list = key.split('.')
             name_error = NameError("%s is an illegal key!", key)
             for name in name_list:
-                if not (util.legal_variable_name(name) or name.isdigit() or 
-                        name == '$'):
+                if not (util.legal_variable_name(name) or name.isdigit() or name == '$'):
                     raise name_error
 
             if name_list.count('$') > 1:
@@ -148,13 +144,14 @@ class Validator(object):
             elif operator == '$addToSet':
                 if isinstance(value, dict) and '$each' in value:
                     if len(value.items()) > 1:
-                        raise SyntaxError("There cant't be other keys except "
-                                          "'$each'.")
+                        raise SyntaxError(
+                            "There cant't be other keys except '$each'.")
 
                     value = value['$each']
                     if not isinstance(value, (list, tuple)):
-                        raise TypeError("Value of '$each' should be list or "
-                                        "tuple type.")
+                        raise TypeError(
+                            "Value of '$each' should be list or tuple type.")
+
                     value = {'value': value, 'each': True}
                 else:
                     value = {'value': [value], 'each': False}
@@ -162,77 +159,83 @@ class Validator(object):
             elif operator == '$inc':
                 if not util.isnum(value):
                     raise ValueError("Value in '$inc' must be number.")
+
                 value = {'value': value}
 
             elif operator == '$pushAll':
                 if not isinstance(value, (list, tuple)):
-                    raise TypeError("Value in '$pushAll' should be list or "
-                                    "tuple.")
+                    raise TypeError(
+                        "Value in '$pushAll' should be list or tuple.")
+
                 value = {'value': value}
 
             elif operator == '$push':
                 if isinstance(value, dict) and '$each' in value:
                     if len(value.items()) > 1:
-                        raise SyntaxError("There cant't be other keys except "
-                                          "'$each'.")
+                        raise SyntaxError(
+                            "There cant't be other keys except '$each'.")
 
                     value = value['$each']
                     if not isinstance(value, (list, tuple)):
-                        raise TypeError("Value of '$each' should be list or "
-                                        "tuple type.")
+                        raise TypeError(
+                            "Value of '$each' should be list or tuple type.")
                     value = {'value': value, 'each': True}
                 else:
                     value = {'value': [value], 'each': False}
 
             elif operator == '$bit':
                 if not isinstance(value, dict):
-                    raise TypeError("The field value of '$bit' shoud be dict "
-                                    "type.")
+                    raise TypeError(
+                        "The field value of '$bit' shoud be dict type.")
 
                 if len(value.items()) != 1:
-                    raise ValueError("Can't have other key except 'and' and "
-                                     "'or' in '$bit'")
+                    raise ValueError(
+                        "Can't have other key except 'and' and 'or' in '$bit'")
 
                 key = value.keys()[0]
                 if key != 'and' and key != 'or':
                     raise ValueError("Key in '$bit' should be 'and' or 'or'.")
 
                 if not isinstance(value[key], (int, long)):
-                    raise TypeError("Value in '$bit' should be int or long "
-                                    "type.")
+                    raise TypeError("Value in '$bit' should be int or long type.")
+
                 value = {'value': value[key]}
             return value
 
         def post_deal(operator, attr, name, value):
             if operator == '$addToSet':
                 if not isinstance(attr, (ListField, GenericListField)):
-                    raise TypeError("The field added to is not an instance of "
-                                    "ListField or GenericListField.")
+                    raise TypeError(
+                        "The field added to is not an instance of ListField "
+                        "or GenericListField.")
 
             elif operator == '$inc':
                 if not isinstance(attr, (IntegerField, FloatField)):
-                    raise TypeError("The field assigned to is not an instance "
-                                    "of IntegerField or FloatField.")
+                    raise TypeError(
+                        "The field assigned to is not an instance of "
+                        "IntegerField or FloatField.")
 
             elif operator == '$pushAll':
                 if not isinstance(attr, (ListField, GenericListField)):
-                    raise TypeError("The field added to is not an instance of "
-                                    "ListField or GenericListField.")
+                    raise TypeError(
+                        "The field added to is not an instance of ListField "
+                        "or GenericListField.")
 
             elif operator == '$push':
                 if not isinstance(attr, (ListField, GenericListField)):
-                    raise TypeError("The field added to is not an instance of "
-                                    " ListField or GenericListField.")
+                    raise TypeError(
+                        "The field added to is not an instance of ListField "
+                        "or GenericListField.")
 
             elif operator == '$bit':
                 if not isinstance(attr, IntegerField):
-                    raise TypeError("The field bitwith to is not an instance "
-                                    "of IntegerField.")
+                    raise TypeError(
+                        "The field bitwith to is not an instance of IntegerField.")
 
             elif operator == '$unset':
                 if not isinstance(attr, (GenericDictField, DictField)):
-                    raise TypeError("%s should be in GenericDictField or"
-                                    "DictField." % name)
+                    raise TypeError(
+                        "%s should be in GenericDictField or DictField." % name)
 
                 if isinstance(attr, DictField):
                     fields_dict = attr.document.fields_dict()
@@ -244,10 +247,10 @@ class Validator(object):
                 value = pre_deal(operator, value)
 
                 original_name = name
-                # Is the field name in self.son[operator] is right? 
+
                 name_list = check_key_in_operator_fields(name)
-                name_without_dollar = '.'.join([name for name in name_list 
-                                               if name != '$'])
+                name_without_dollar = '.'.join(
+                    [name for name in name_list if name != '$'])
 
                 fields_dict = self.document_cls.fields_dict()
 
@@ -274,87 +277,70 @@ class Validator(object):
                                                 GenericListField):
                                     break
                                 else:
-                                    raise TypeError("item in %s should be "
-                                                    "GenericListField or "
-                                                    "ListField type." %
-                                                    name)
+                                    raise TypeError(
+                                        "item in %s should be GenericListField "
+                                        "or ListField type." % name)
                             else:
                                 if isinstance(current_attr.field, DictField):
                                     current_attr = current_attr.field
-                                elif isinstance(current_attr.field, 
-                                                GenericDictField):
+                                elif isinstance(current_attr.field, GenericDictField):
                                     break
                                 else:
-                                    raise TypeError("item in %s should be "
-                                                    "GenericDictField or "
-                                                    "DictField type." % name)
+                                    raise TypeError(
+                                        "item in %s should be GenericDictField "
+                                        "or DictField type." % name)
                         else:
                             if operator == '$unset':
-                                post_deal(operator, current_attr, last_name,
-                                          value)
+                                post_deal(operator, current_attr, last_name, value)
                             else:
-                                post_deal(operator, current_attr, 
-                                          name_without_dollar, value)
+                                post_deal(operator, current_attr, name_without_dollar, value)
 
-                                result = self.__check_value(current_attr,
-                                                           name_without_dollar,
-                                                           value['value'])
+                                result = self.__check_value(
+                                    current_attr, name_without_dollar, value['value'])
+
                                 if value.has_key('each'):
                                     if value['each']:
-                                        (document[operator][original_name]
-                                                           ['$each']) = result
+                                        document[operator][original_name]['$each'] = result
                                     else:
-                                        (document[operator]
-                                                 [original_name]) = result[0]
+                                        document[operator][original_name] = result[0]
                                 else:    
                                     document[operator][original_name] = result
 
-                            
                     else:
                         if index != len(name_list) - 1:
                             next_name = name_list[index + 1]
 
                             if util.legal_variable_name(next_name):
-                                if isinstance(current_attr, 
-                                              DictField):
-                                    current_attr = (current_attr.document.
-                                                    fields_dict()[next_name])
+                                if isinstance(current_attr, DictField):
+                                    current_attr = current_attr.document.fields_dict()[next_name]
 
-                                elif isinstance(current_attr, 
-                                                GenericDictField):
+                                elif isinstance(current_attr, GenericDictField):
                                     break
                                 else:
-                                    raise TypeError("'%s' isn't DictField or "
-                                                    "GenericDictField type." %
-                                                    name)
+                                    raise TypeError(
+                                        "'%s' isn't DictField or GenericDictField type." % name)
                             else:
                                 if isinstance(current_attr, ListField):
                                     current_attr = current_attr.field
-                                elif isinstance(current_attr, 
-                                                GenericListField):
+                                elif isinstance(current_attr, GenericListField):
                                     break
                                 else:
-                                    raise TypeError("%s isn't ListField or "
-                                                    "GenericListField type." %
-                                                    name)
+                                    raise TypeError(
+                                        "%s isn't ListField or GenericListField type." % name)
                         else:
                             if operator == '$unset':
-                                post_deal(operator, current_attr, last_name,
-                                          value)
+                                post_deal(operator, current_attr, last_name, value)
                             else:
-                                post_deal(operator, current_attr, 
-                                          name_without_dollar, value)
+                                post_deal(operator, current_attr, name_without_dollar, value)
 
-                                result = self.__check_value(current_attr,
-                                                           name_without_dollar,
-                                                           value['value'])
+                                result = self.__check_value(
+                                    current_attr, name_without_dollar, value['value'])
+
                                 if value.has_key('each'):
                                     if value['each']:
-                                        (document[operator][original_name]
-                                                           ['$each']) = result
+                                        document[operator][original_name]['$each'] = result
                                     else:
-                                        (document[operator]
-                                                 [original_name]) = result[0]
+                                        document[operator][original_name] = result[0]
                                 else:    
                                     document[operator][original_name] = result
 
@@ -400,13 +386,12 @@ class Validator(object):
         else:
             if document.has_key('$setOnInsert'):
 
-                mongodb_version = (self.pymongo_db.command('buildInfo')
-                                   ['version'])
+                mongodb_version = self.pymongo_db.command('buildInfo')['version']
 
                 if mongodb_version < '2.4':
-                    raise KeyError("Your Mongdb's version is %s, only version "
-                                   "2.4+ support '$setOnInsert'." %
-                                   mongodb_version)
+                    raise KeyError(
+                        "Your Mongdb's version is %s, only version 2.4+ support "
+                        " '$setOnInsert'." % mongodb_version)
 
                 document = document['$setOnInsert']
                 document, _ = self.insert(document)

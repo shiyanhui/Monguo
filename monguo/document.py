@@ -3,7 +3,7 @@
 # @Author: lime
 # @Date:   2013-10-25 19:45:09
 # @Last Modified by:   lime
-# @Last Modified time: 2013-11-27 11:51:29
+# @Last Modified time: 2014-03-09 14:52:26
 
 import sys
 import inspect
@@ -26,15 +26,17 @@ __all__ = ['BaseDocument', 'EmbeddedDocument', 'Document']
 
 
 class MonguoOperation(object):
-    '''The query operation. 
+    '''
+    The query operation. 
 
     Each one corresponds to the same name method of motor.
     '''
     def bound_method(self, monguo_method):
-        '''Bound monguo method to motor method.
+        '''
+        Bound monguo method to motor method.
 
         :Parameters:
-            - `monguo_method`: The method to be bounded.
+          - `monguo_method`: The method to be bounded.
         '''
         @classmethod
         def method(cls, *args, **kwargs):
@@ -42,12 +44,15 @@ class MonguoOperation(object):
             motor_method = getattr(collection, monguo_method)
 
             validator = Validator(cls, collection)
+
             try:
                 validate_method = getattr(validator, monguo_method)
                 args, kwargs = validate_method(*args, **kwargs)
             except AttributeError:
                 pass
+
             return motor_method(*args, **kwargs)
+
         return method
     
 class MonguoMeta(type):
@@ -91,7 +96,7 @@ class BaseDocument(object):
         '''Validate the given document.
 
         :Parameters:
-            - `document`: The document to be validated.
+          - `document`: The document to be validated.
         '''
         if not isinstance(document, dict):
             raise TypeError("Argument 'document' should be dict type.")
@@ -108,12 +113,12 @@ class BaseDocument(object):
 
         for name, attr in fields_dict.items():
             if (attr.required and not document.has_key(name) 
-                              and attr.default is None):
+                    and attr.default is None):
                 raise RequiredError(field=name)
 
             value = None
             if (attr.required and not document.has_key(name) 
-                              and attr.default is not None):
+                    and attr.default is not None):
                 value = attr.default
 
             elif document.has_key(name):
@@ -135,7 +140,9 @@ class EmbeddedDocument(BaseDocument):
 
 
 class Document(BaseDocument):
-    '''The ORM core, supports `all the query operations of motor <http://motor.readthedocs.org/en/stable/api/motor_collection.html>`_.'''
+    '''
+    The ORM core, supports `all the query operations of motor 
+    <http://motor.readthedocs.org/en/stable/api/motor_collection.html>`_.'''
 
     __metaclass__     = MonguoMeta
     meta              = {}
@@ -171,7 +178,7 @@ class Document(BaseDocument):
         '''Get the database name related to `cls`.'''
 
         db_name = (cls.meta['db'] if 'db' in cls.meta else 
-                   Connection.get_default_database_name())
+            Connection.get_default_database_name())
         return db_name
 
     @classmethod
@@ -179,20 +186,20 @@ class Document(BaseDocument):
         '''Get the collection name related to `cls`.'''
 
         collection_name = (cls.meta['collection'] if 'collection' in cls.meta
-                           else util.camel_to_underline(cls.__name__))
+            else util.camel_to_underline(cls.__name__))
         return collection_name
 
     @classmethod
     def get_database(cls, pymongo=False):
         '''
-        Get the database related to `cls`, it's an instance of :class:`~motor.MotorDatabase`.
+        Get the database related to `cls`, it's an instance of 
+        :class:`~motor.MotorDatabase`.
 
         :Parameters:
-            - `pymongo`: Return pymongo.database if True.
+          - `pymongo`: Return pymongo.database if True.
         '''
 
-        connection_name = (cls.meta['connection'] if 'connection' in cls.meta
-                           else None)
+        connection_name = cls.meta['connection'] if 'connection' in cls.meta else None
         db_name = cls.get_database_name()
         db = Connection.get_database(connection_name, db_name, pymongo)
         return db
@@ -200,10 +207,11 @@ class Document(BaseDocument):
     @classmethod
     def get_collection(cls, pymongo=False):
         '''
-        Get the collection related to `cls`, it's an instance of :class:`~motor.MotorCollection`.
+        Get the collection related to `cls`, it's an instance of 
+        :class:`~motor.MotorCollection`.
 
         :Parameters:
-            - `pymongo`: Return pymongo.collection if True.
+          - `pymongo`: Return pymongo.collection if True.
         '''
 
         db= cls.get_database(pymongo)
@@ -217,14 +225,13 @@ class Document(BaseDocument):
         '''Get the document related with `dbref`.
 
         :Parameters:
-            - `dbref`: The dbref to be translated.
+          - `dbref`: The dbref to be translated.
         '''
         if not isinstance(dbref, DBRef):
             raise TypeError("'%s' isn't DBRef type.")
 
         if dbref.database is not None:
-            connection_name = (cls.meta['connection'] if 'connection' in 
-                               cls.meta else None)
+            connection_name = cls.meta['connection'] if 'connection' in cls.meta else None
             db = Connection.get_database(connection_name, dbref.database)
         else:
             db = cls.get_database()
@@ -239,7 +246,7 @@ class Document(BaseDocument):
         '''Translate dbrefs in the specified `document`.
 
         :Parameters:
-            - `document`: The specified document.
+          - `document`: The specified document.
         '''
         if not isinstance(document, dict):
             raise TypeError("Argument 'document' should be dict type.")
@@ -255,19 +262,27 @@ class Document(BaseDocument):
         '''Translate dbrefs in the document list.
 
         :Parameters:
-            - `document_list`: The specified document list.
+          - `document_list`: The specified document list.
         '''
         if not isinstance(document_list, (list, tuple)):
-            raise TypeError("Argument document_list should be list or tuple "
-                            "tpye.")
+            raise TypeError("Argument document_list should be list or tuple tpye.")
+
         for document in document_list:
             document = yield cls.translate_dbref_in_document(document)
         raise gen.Return(document_list)
 
     @classmethod
     @gen.coroutine
-    def to_list(cls, cursor):
+    def to_list(cls, cursor, length=None):
+        '''Warp cursor.to_list() since `length` is required in `cursor.to_list`'''
+
         resut = []
-        while (yield cursor.fetch_next):
-            resut.append(cursor.next_object())
+
+        if length is not None:
+            assert isinstance(length, int)
+            reuslt = yield cursor.to_list(length=length)
+        else:
+            while (yield cursor.fetch_next):
+                resut.append(cursor.next_object())
+
         raise gen.Return(resut)

@@ -3,7 +3,7 @@
 # @Author: lime
 # @Date:   2013-10-25 19:45:09
 # @Last Modified by:   lime
-# @Last Modified time: 2013-11-11 20:22:10
+# @Last Modified time: 2014-03-09 15:16:46
 
 __all__ = ['ConnectionError', 'AssignmentError', 'RequiredError', 
            'UniqueError', 'CandidateError', 'UndefinedFieldError',
@@ -21,6 +21,7 @@ FIELD_NAME_ERROR   = "Field name '%s' can't contain character '.' or '$'!"
 NOT_SUPPORT_ERROR  = "Operation %s is not supported."
 FIELD_VALUE_ERROR  = "Value '%s' is not %s."
 
+
 class MonguoBaseError(Exception):
     '''Base Monguo error class.'''
     
@@ -33,6 +34,7 @@ class MonguoBaseError(Exception):
 
 class ConnectionError(MonguoBaseError):
     pass
+
 
 class ValidateError(MonguoBaseError):
     pass
@@ -65,47 +67,47 @@ class FieldCheckError(MonguoBaseError):
 
 class AssignmentError(FieldCheckError):
     def __init__(self, field=None, **kwargs):
-        super(AssignmentError, self).__init__(ASSIGNMENT_ERROR, 
-                                              field=field, **kwargs)
+        super(AssignmentError, self).__init__(
+            ASSIGNMENT_ERROR, field=field, **kwargs)
 
 
 class RequiredError(FieldCheckError):
     def __init__(self, field=None, **kwargs):
-        super(RequiredError, self).__init__(REQUIRED_MESSAGE, 
-                                            field=field, **kwargs)
+        super(RequiredError, self).__init__(
+            REQUIRED_MESSAGE, field=field, **kwargs)
 
 
 class UniqueError(FieldCheckError):
     def __init__(self, field=None, **kwargs):
-        super(UniqueError, self).__init__(UNIQUE_ERROR, 
-                                          field=field, **kwargs)
+        super(UniqueError, self).__init__(
+            UNIQUE_ERROR, field=field, **kwargs)
 
 
 class CandidateError(FieldCheckError):
     def __init__(self, field=None, **kwargs):
-        super(CandidateError, self).__init__(CANDIDATE_ERROR, 
-                                             field=field, **kwargs)
+        super(CandidateError, self).__init__(
+            CANDIDATE_ERROR, field=field, **kwargs)
 
 
 class UndefinedFieldError(FieldCheckError):
     def __init__(self, field=None, **kwargs):
-        super(UndefinedFieldError, self).__init__(UNDEFINED_ERROR, 
-                                                  field=field, **kwargs)
+        super(UndefinedFieldError, self).__init__(
+            UNDEFINED_ERROR, field=field, **kwargs)
 
 
 class FieldDeleteError(FieldCheckError):
     def __init__(self, field=None, **kwargs):
-        super(FieldDeleteError, self).__init__(FIELD_DELETE_ERROR, 
-                                               field=field, **kwargs)
+        super(FieldDeleteError, self).__init__(
+            FIELD_DELETE_ERROR, field=field, **kwargs)
 
 
 class FieldRenameError(FieldCheckError):
     def __init__(self, field=None, **kwargs):
-        super(FieldRenameError, self).__init__(FIELD_RENAME_ERROR, 
-                                               field=field, **kwargs)
+        super(FieldRenameError, self).__init__(
+            FIELD_RENAME_ERROR, field=field, **kwargs)
 
 
 class FieldNameError(FieldCheckError):
     def __init__(self, field=None, **kwargs):
-        super(FieldNameError, self).__init__(FIELD_NAME_ERROR, 
-                                             field=field, **kwargs)
+        super(FieldNameError, self).__init__(
+            FIELD_NAME_ERROR, field=field, **kwargs)
