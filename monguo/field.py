@@ -3,7 +3,7 @@
 # @Author: lime
 # @Date:   2013-10-25 19:45:09
 # @Last Modified by:   lime
-# @Last Modified time: 2014-03-09 15:24:28
+# @Last Modified time: 2014-03-14 14:56:02
 
 import re
 import util
@@ -152,12 +152,11 @@ class IntegerField(Field):
         '''
         super(IntegerField, self).__init__(**kwargs)
 
-        if (min_value is not None and 
-                         not isinstance(min_value, (int, long, float))):
-            raise TypeError("Argument 'min_value' should be integer value.")
+        if min_value is not None and not isinstance(min_value, (int, long, float)):
+            raise TypeError("Argument 'min_value' should be number.")
 
-        if max_value is not None and not isinstance(max_value, (int, long)):
-            raise TypeError("Argument 'max_value' should be integer value.")
+        if max_value is not None and not isinstance(max_value, (int, long, float)):
+            raise TypeError("Argument 'max_value' should be number.")
 
         self.min_value = min_value
         self.max_value = max_value
@@ -167,7 +166,7 @@ class IntegerField(Field):
             raise TypeError("'%s' is not int or long type." % value)
         try:
             value = long(value)
-        except Exception, e:
+        except:
             raise ValidateError("'%s' cann't be converted to int value." % value)
         return value
 
@@ -195,12 +194,11 @@ class FloatField(Field):
         '''
         super(FloatField, self).__init__(**kwargs)
         
-        if (min_value is not None and 
-                not isinstance(min_value, (int, long, float))):
+        if min_value is not None and not isinstance(min_value, (int, long, float)):
             raise TypeError("Argument 'min_value' should be number.")
 
-        if max_value is not None and not isinstance(max_value, (int, long)):
-            raise TypeError("Argument 'max_value' should be integer value.")
+        if max_value is not None and not isinstance(max_value, (int, long, float)):
+            raise TypeError("Argument 'max_value' should be number.")
 
         self.min_value = min_value
         self.max_value = max_value
@@ -210,9 +208,9 @@ class FloatField(Field):
             raise TypeError("'%s' is not float type." % value)
         
         try:
-            value = long(value)
-        except Exception, e:
-            raise ValidateError("'%s' cann't be converted to int value." % value)
+            value = float(value)
+        except:
+            raise ValidateError("'%s' cann't be converted to float value." % value)
 
         return value
 
@@ -220,12 +218,11 @@ class FloatField(Field):
         value = super(FloatField, self).validate(value)
 
         if self.min_value is not None and value < self.min_value:
-            raise ValidateError("'%s' is smaller than '%s'." % 
-                                (value, self.min_value))
+            raise ValidateError("'%s' is smaller than '%s'." % (value, self.min_value))
 
         if self.max_value is not None and value > self.max_value:
-            raise ValidateError("'%s' is larger than '%s'." % 
-                                (self.value, self.max_value ))
+            raise ValidateError("'%s' is larger than '%s'." % (self.value, self.max_value ))
+            
         return value
 
 
