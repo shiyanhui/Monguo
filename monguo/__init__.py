@@ -3,7 +3,7 @@
 # @Author: lime
 # @Date:   2013-10-25 19:45:09
 # @Last Modified by:   lime
-# @Last Modified time: 2014-03-26 14:39:38
+# @Last Modified time: 2014-03-26 15:30:26
 
 '''Monguo, an asynchronous MongoDB ORM for Tornado'''
 
@@ -13,7 +13,7 @@ from field import *
 from error import *
 
 
-VERSION = (0, 1, 6)
+VERSION = (0, 1, 12)
 
 def get_version():
     if isinstance(VERSION[-1], basestring):
