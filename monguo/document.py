@@ -3,7 +3,7 @@
 # @Author: lime
 # @Date:   2013-10-25 19:45:09
 # @Last Modified by:   lime
-# @Last Modified time: 2014-03-09 14:52:26
+# @Last Modified time: 2014-03-26 14:28:29
 
 import sys
 import inspect
@@ -72,7 +72,7 @@ class MonguoMeta(type):
                     setattr(new_class, name, new_attr)
 
                 elif isinstance(attr, types.FunctionType):
-                    new_attr = staticmethod(gen.coroutine(attr))
+                    new_attr = staticmethod(attr)
                     setattr(new_class, name, new_attr)
         
         return new_class

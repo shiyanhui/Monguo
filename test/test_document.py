@@ -1,4 +1,9 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# @Author: lime
+# @Date:   2014-03-26 14:00:01
+# @Last Modified by:   lime
+# @Last Modified time: 2014-03-26 14:07:06
 
 import unittest
 import pymongo
@@ -10,7 +15,7 @@ from monguo.connection import Connection
 from monguo.document import Document, EmbeddedDocument
 from monguo.field import *
 
-from test import MotorTest
+from test import MonguoTestBase
 
 class BookDocument(EmbeddedDocument):
     name  = StringField(required=True)
@@ -43,7 +48,7 @@ class UserDocument(Document):
     }
 
 
-class DocumentTest(MotorTest):
+class DocumentTest(MonguoTestBase):
     def setUp(self):
         super(DocumentTest, self).setUp()
         Connection.connect('monguo_test')

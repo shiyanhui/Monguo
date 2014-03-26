@@ -1,4 +1,9 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# @Author: lime
+# @Date:   2014-03-26 14:00:01
+# @Last Modified by:   lime
+# @Last Modified time: 2014-03-26 14:37:29
 
 from datetime import datetime
 from bson.objectid import ObjectId
@@ -22,9 +27,39 @@ class UserDocument(Document):
         'collection': 'user'
     }
 
-    def get_user_list(skip=10, limit=5):
-        result = yield UserDocument.find().to_list(limit)
+    @gen.coroutine
+    def get_user_list_1():
+        result = yield UserDocument.to_list(UserDocument.find())
         raise gen.Return(result)
+
+
+    @staticmethod
+    @gen.coroutine
+    def get_user_list_2():
+        result = yield UserDocument.to_list(UserDocument.find())
+        raise gen.Return(result)
+
+
+    @classmethod
+    @gen.coroutine
+    def get_user_list_3(cls):
+        result = yield UserDocument.to_list(UserDocument.find())
+        raise gen.Return(result)
+
+
+    def get_user_list_4():
+        result = [item for item in UserDocument.get_collection(True).find()]
+        return result
+
+    @staticmethod
+    def get_user_list_5():
+        result = [item for item in UserDocument.get_collection(True).find()]
+        return result
+
+    @classmethod
+    def get_user_list_6(cls):
+        result = [item for item in UserDocument.get_collection(True).find()]
+        return result
 
 
 class CommentDocument(EmbeddedDocument):
@@ -78,10 +113,18 @@ def test():
 
     user = yield UserDocument.find_one({'name': 'Bob'})
     posts = yield PostDocument.find().to_list(5)
-    user_list = yield UserDocument.get_user_list()
-
+    user_list = yield UserDocument.get_user_list_1()
+    print user_list
+    user_list = yield UserDocument.get_user_list_2()
+    print user_list
+    user_list = yield UserDocument.get_user_list_3()
+    print user_list
+    user_list = UserDocument.get_user_list_4()
+    print user_list
+    user_list = UserDocument.get_user_list_5()
+    print user_list
+    user_list = UserDocument.get_user_list_6()
+    print user_list
 
 if __name__ == '__main__':
     IOLoop.instance().run_sync(test)
-
-   
