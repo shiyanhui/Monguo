@@ -135,7 +135,7 @@ class StringField(Field):
         if self.max_length is not None and len(value) > self.max_length: 
             raise ValidateError("String value is too long.")
 
-        if self.regex is not None and re.match(regex, value) is None:
+        if self.regex is not None and re.match(self.regex, value) is None:
             raise ValidateError("regex doesn't match.")
 
         return value
