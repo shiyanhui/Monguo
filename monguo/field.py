@@ -426,7 +426,7 @@ class ObjectIdField(Field):
         return value
 
     def validate(self, value): 
-        value = super(ObjectId, self).validate(value)
+        value = super(ObjectIdField, self).validate(value)
         return value
 
 
