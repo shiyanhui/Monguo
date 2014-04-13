@@ -3,7 +3,7 @@
 # @Author: lime
 # @Date:   2013-10-25 19:45:09
 # @Last Modified by:   lime
-# @Last Modified time: 2014-03-26 14:28:29
+# @Last Modified time: 2014-04-13 15:47:17
 
 import sys
 import inspect
@@ -242,11 +242,12 @@ class Document(BaseDocument):
 
     @classmethod
     @gen.coroutine
-    def translate_dbref_in_document(cls, document):
+    def translate_dbref_in_document(cls, document, depth=1):
         '''Translate dbrefs in the specified `document`.
 
         :Parameters:
           - `document`: The specified document.
+          - `depth`: The translate depth.
         '''
         if not isinstance(document, dict):
             raise TypeError("Argument 'document' should be dict type.")
@@ -254,21 +255,27 @@ class Document(BaseDocument):
         for name, value in document.items():
             if isinstance(value, DBRef):
                 document[name] = yield cls.translate_dbref(value)
+                if depth > 1:
+                    document[name] = yield cls.translate_dbref_in_document(
+                        document[name], depth - 1)
+
         raise gen.Return(document)
 
     @classmethod
     @gen.coroutine
-    def translate_dbref_in_document_list(cls, document_list):
+    def translate_dbref_in_document_list(cls, document_list, depth=1):
         '''Translate dbrefs in the document list.
 
         :Parameters:
           - `document_list`: The specified document list.
+          - `depth`: The translate depth.
         '''
         if not isinstance(document_list, (list, tuple)):
             raise TypeError("Argument document_list should be list or tuple tpye.")
 
         for document in document_list:
-            document = yield cls.translate_dbref_in_document(document)
+            document = yield cls.translate_dbref_in_document(document, depth)
+
         raise gen.Return(document_list)
 
     @classmethod
