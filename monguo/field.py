@@ -3,7 +3,7 @@
 # @Author: lime
 # @Date:   2013-10-25 19:45:09
 # @Last Modified by:   lime
-# @Last Modified time: 2014-03-14 14:56:02
+# @Last Modified time: 2014-05-05 18:34:05
 
 import re
 import util
@@ -118,12 +118,12 @@ class StringField(Field):
         self.max_length = max_length
 
     def check_type(self, value):
-        if self.strict and not isinstance(value, basestring):
+        if self.strict and not isinstance(value, (basestring, unicode)):
             raise TypeError("'%s' is not string type." % value)
         try:
-            value = str(value)
+            value = unicode(value)
         except:
-            raise ValidateError("Can't convert '%r' to string." % value)
+            raise ValidateError("Can't convert '%r' to unicode." % value)
         return value
 
     def validate(self, value):
