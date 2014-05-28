@@ -3,7 +3,7 @@
 # @Author: lime
 # @Date:   2013-10-25 19:45:09
 # @Last Modified by:   lime
-# @Last Modified time: 2014-05-05 18:34:05
+# @Last Modified time: 2014-05-28 21:11:03
 
 import re
 import util
@@ -22,8 +22,8 @@ from error import *
 __all__ = ['Field', 'StringField', 'IntegerField', 'BooleanField',
            'FloatField', 'EmbeddedDocumentField', 'GenericDictField', 
            'DictField', 'GenericListField', 'ListField', 'EmailField',
-           'ReferenceField', 'ObjectIdField', 'DateTimeField', 'DateField',
-           'TimeField', 'BinaryField', 'LocationField']
+           'ReferenceField', 'ObjectIdField', 'GridFileField', 'DateTimeField', 
+           'DateField', 'TimeField', 'BinaryField', 'LocationField']
 
 class Field(object):
     '''Base field class.'''
@@ -428,6 +428,12 @@ class ObjectIdField(Field):
     def validate(self, value): 
         value = super(ObjectIdField, self).validate(value)
         return value
+
+
+class GridFileField(ObjectIdField):
+    '''An GridFileField field.'''
+    
+    pass
 
 
 class DateTimeField(Field):

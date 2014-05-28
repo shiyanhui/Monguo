@@ -3,14 +3,14 @@
 # @Author: lime
 # @Date:   2013-10-25 19:45:09
 # @Last Modified by:   lime
-# @Last Modified time: 2014-04-13 15:47:17
+# @Last Modified time: 2014-05-28 21:40:09
 
 import sys
 import inspect
 import motor
 import types
 import util
-import abc
+import motor
 
 from tornado import gen
 from bson.dbref import DBRef
@@ -293,3 +293,12 @@ class Document(BaseDocument):
                 resut.append(cursor.next_object())
 
         raise gen.Return(resut)
+
+
+    @classmethod
+    @gen.coroutine
+    def get_gridfs(cls):
+        db = cls.get_database()
+        fs = yield motor.MotorGridFS(db).open()
+
+        raise gen.Return(fs)
