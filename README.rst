@@ -8,9 +8,6 @@ Monguo
 :Info: Monguo is a full-featured, asynchronous MongoDB_ ORM with Motor_ dirver for Tornado_ applications.
 :Author: Lime YH.Shi
 
-.. image:: https://travis-ci.org/shiyanhui/monguo.png
-        :target: https://travis-ci.org/shiyanhui/monguo
-
 .. image:: https://pypip.in/v/monguo/badge.png
         :target: https://crate.io/packages/monguo
 
@@ -27,10 +24,6 @@ About
 
 Monguo is an asynchronous MongoDB ORM based on driver Motor_. The `source is on GitHub <https://github.com/shiyanhui/monguo>`_ and the docs are on `ReadTheDocs <http://monguo.readthedocs.org/en/latest/>`_.
 
-Issues / Questions / Feedback
-=============================
-
-You can open an issue on `GitHub <https://github.com/shiyanhui/monguo/issues>`_ or email me directly at shiyanhui66@gmail.com if you have any question or feedback.
 
 Installation
 ============
@@ -46,12 +39,8 @@ Dependencies
 Monguo works in all the environments officially supported by Tornado_ and Motor_. It requires:
 
 * Unix, including Mac OS X. Microsoft Windows is not officially supported.
-* Tornado_ 3.0+ (temporarily)
-* Motor_ 0.1+ (temporarily)
-
-Additional dependencies are:
-
-- (to generate documentation) sphinx_
+* Tornado_ 3.0+ 
+* Motor_ 0.2+
 
 Examples
 ========
