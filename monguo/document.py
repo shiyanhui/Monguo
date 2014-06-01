@@ -3,7 +3,7 @@
 # @Author: lime
 # @Date:   2013-10-25 19:45:09
 # @Last Modified by:   lime
-# @Last Modified time: 2014-05-28 21:40:09
+# @Last Modified time: 2014-05-29 13:26:49
 
 import sys
 import inspect
@@ -293,12 +293,3 @@ class Document(BaseDocument):
                 resut.append(cursor.next_object())
 
         raise gen.Return(resut)
-
-
-    @classmethod
-    @gen.coroutine
-    def get_gridfs(cls):
-        db = cls.get_database()
-        fs = yield motor.MotorGridFS(db).open()
-
-        raise gen.Return(fs)
