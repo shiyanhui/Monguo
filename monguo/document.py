@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 # @Author: lime
 # @Date:   2013-10-25 19:45:09
-# @Last Modified by:   lime
-# @Last Modified time: 2014-05-29 13:26:49
+# @Last Modified by:   Lime
+# @Last Modified time: 2014-06-14 22:07:46
 
 import sys
 import inspect
@@ -293,3 +293,15 @@ class Document(BaseDocument):
                 resut.append(cursor.next_object())
 
         raise gen.Return(resut)
+
+
+    @classmethod
+    def get_gridfs(cls, async=True):
+        if async:
+            db = Connection.get_database()
+            fs = motor.MotorGridFS(db)
+        else:
+            db = Connection.get_database(pymongo=True)
+            fs = gridfs.GridFS(db)
+
+        return fs
