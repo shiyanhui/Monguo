@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 # @Author: lime
 # @Date:   2013-10-25 19:45:09
-# @Last Modified by:   lime
-# @Last Modified time: 2014-06-01 11:15:18
+# @Last Modified by:   Lime
+# @Last Modified time: 2014-06-14 22:56:48
 
 '''Monguo, an asynchronous MongoDB ORM for Tornado'''
 
@@ -13,7 +13,7 @@ from field import *
 from error import *
 
 
-VERSION = (0, 2, 1)
+VERSION = (0, 2, 2)
 
 def get_version():
     if isinstance(VERSION[-1], basestring):
