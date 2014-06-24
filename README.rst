@@ -39,6 +39,8 @@ Examples
 
 .. code-block:: python
     
+    from monguo import *
+
     class UserDocument(Document):
         name  = StringField(required=True, unique=True, max_length=20)
         email = EmailField(required=True)
@@ -55,58 +57,21 @@ Examples
             raise gen.Return(user_list)
 
 
-    class CommentDocument(EmbeddedDocument):
-        commentor = ReferenceField(UserDocument, required=True)
-        contents  = StringField(required=True, max_length=200)
+    Connection.connect('db') # connect to database
 
-
-    class PostDocument(Document):
-        author       = ReferenceField(UserDocument, required=True)
-        publish_time = DateTimeField(required=True)
-        title        = StringField(required=True, max_length=100)
-        contents     = StringField(max_length=5000)
-        comments     = ListField(EmbeddedDocumentField(CommentDocument))
-
-        meta = {
-            'collection': 'post'
-        }
-
-    
-    Connection.connect('test') # connect to database
-
-    bob_id = yield UserDocument.insert({
+    # insert
+    user_id = yield UserDocument.insert({
         'name': 'Bob',
-        'email': 'bob@gmail.com',
-        'age': 19
+        'email': 'bob@gmail.com'
     })
 
-    alice_id = yield UserDocument.insert({
-        'name': 'Alice',
-        'email': 'alice@gmail.com',
-        'sex': 'female',
-        'age': 18
-    })
-
-    post_id = yield PostDocument.insert({
-        'author': DBRef(UserDocument.meta['collection'], bob_id),
-        'publish_time': datetime.now(),
-        'title': 'title',
-    })
-    
     # update
-    comment = {
-        'commentor': DBRef(UserDocument.meta['collection'], alice_id),
-        'contents': 'I am comments.'
-    }
-    yield PostDocument.update(
-        {'_id': post_id}, 
-        {'$push': {'comments': comment}})
+    yield UserDocument.update(
+        {'_id': user_id}, 
+        {'$set': {'age': 19}})
 
     # query
     user = yield UserDocument.find_one({'name': 'Bob'})
-    posts = yield PostDocument.find().to_list()
-
-    # higher API
     user_list = yield UserDocument.get_user_list()
 
 
