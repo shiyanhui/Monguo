@@ -1,0 +1,6 @@
+[submodule "_themes/plain"]
+	path = _themes/plain
+	url = git://github.com/hit9/sphinx-theme-rux.git
+[submodule "doc/_themes/plain"]
+	path = doc/_themes/plain
+	url = git://github.com/hit9/sphinx-theme-rux.git

@@ -262,3 +262,12 @@ texinfo_documents = [
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
+
+sys.path.append(os.path.abspath('../../_themes'))
+html_theme_path = ['_themes']
+html_theme = 'plain'
+html_theme_options = {
+    'github': 'shiyanhui',  # Here, fill in your own GitHub ID
+    'project_logo': 'https://raw.githubusercontent.com/hit9/artworks/master/png/Skylark.png',  # your project logo address
+    'navs': [('index', 'overview'), ('quickstart', 'quickstart')] # (doc, name)
+}
