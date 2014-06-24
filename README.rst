@@ -45,7 +45,7 @@ Examples
         name  = StringField(required=True, unique=True, max_length=20)
         email = EmailField(required=True)
         age   = IntegerField()
-        sex   = StringField(required=True, default='male', candidate=['male', 'female'])
+        sex   = StringField(default='male', candidate=['male', 'female'])
 
         meta = {
             'collection': 'user'
