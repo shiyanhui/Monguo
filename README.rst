@@ -41,6 +41,8 @@ Examples
     
     from monguo import *
 
+    Connection.connect('db') # connect to database
+    
     class UserDocument(Document):
         name  = StringField(required=True, unique=True, max_length=20)
         email = EmailField(required=True)
@@ -59,11 +61,8 @@ Examples
                 assert isinstance(limit, int) and limit > 0
                 cursor.limit(limit)
 
-            user_list = yield cursot.to_list(None)
+            user_list = yield cursor.to_list(None)
             raise gen.Return(user_list)
-
-
-    Connection.connect('db') # connect to database
 
     # insert
     user_id = yield UserDocument.insert({
@@ -74,7 +73,7 @@ Examples
     # query
     user = yield UserDocument.find_one({'name': 'Bob'})
     user_list = yield UserDocument.get_user_list()
-    
+
     # update
     yield UserDocument.update(
         {'_id': user_id}, 
