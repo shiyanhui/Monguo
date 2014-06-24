@@ -52,8 +52,14 @@ Examples
         }
 
         @gen.coroutine
-        def get_user_list(skip=10, limit=5):
-            user_list = yield UserDocument.find().to_list(limit)
+        def get_user_list(skip=0, limit=None):
+            cursor = UserDocument.find().skip(skip)
+
+            if limit is not None:
+                assert isinstance(limit, int) and limit > 0
+                cursor.limit(limit)
+
+            user_list = yield cursot.to_list(None)
             raise gen.Return(user_list)
 
 
@@ -65,14 +71,15 @@ Examples
         'email': 'bob@gmail.com'
     })
 
+    # query
+    user = yield UserDocument.find_one({'name': 'Bob'})
+    user_list = yield UserDocument.get_user_list()
+    
     # update
     yield UserDocument.update(
         {'_id': user_id}, 
         {'$set': {'age': 19}})
-
-    # query
-    user = yield UserDocument.find_one({'name': 'Bob'})
-    user_list = yield UserDocument.get_user_list()
+    
 
 
 .. _MongoDB: http://mongodb.org/
