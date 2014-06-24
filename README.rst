@@ -43,15 +43,16 @@ Examples
         name  = StringField(required=True, unique=True, max_length=20)
         email = EmailField(required=True)
         age   = IntegerField()
-        sex   = StringField(required=True, default='male', 
-                                           candidate=['male', 'female'])
+        sex   = StringField(required=True, default='male', candidate=['male', 'female'])
+
         meta = {
             'collection': 'user'
         }
 
+        @gen.coroutine
         def get_user_list(skip=10, limit=5):
-            result = yield UserDocument.find().to_list(limit)
-            raise gen.Return(result)
+            user_list = yield UserDocument.find().to_list(limit)
+            raise gen.Return(user_list)
 
 
     class CommentDocument(EmbeddedDocument):
@@ -70,10 +71,9 @@ Examples
             'collection': 'post'
         }
 
-    # connect to database
-    Connection.connect('test')
+    
+    Connection.connect('test') # connect to database
 
-    # insert
     bob_id = yield UserDocument.insert({
         'name': 'Bob',
         'email': 'bob@gmail.com',
@@ -98,12 +98,13 @@ Examples
         'commentor': DBRef(UserDocument.meta['collection'], alice_id),
         'contents': 'I am comments.'
     }
-    yield PostDocument.update({'_id': post_id}, 
-                              {'$push': {'comments': comment}})
+    yield PostDocument.update(
+        {'_id': post_id}, 
+        {'$push': {'comments': comment}})
 
     # query
     user = yield UserDocument.find_one({'name': 'Bob'})
-    posts = yield PostDocument.find().to_list(5)
+    posts = yield PostDocument.find().to_list()
 
     # higher API
     user_list = yield UserDocument.get_user_list()
