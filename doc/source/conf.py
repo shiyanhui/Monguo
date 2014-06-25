@@ -263,3 +263,6 @@ texinfo_documents = [
 
 html_theme_path = ['../_themes']
 html_theme = 'plain'
+html_theme_options = {
+    'github': 'shiyanhui'   # Here, fill in your own GitHub ID
+}
