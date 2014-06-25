@@ -14,11 +14,6 @@ Monguo
 .. image:: https://pypip.in/d/monguo/badge.png
         :target: https://crate.io/packages/monguo
 
-.. _MongoDB: http://mongodb.org/
-.. _Motor: https://github.com/mongodb/motor/
-.. _Tornado: http://tornadoweb.org/
-
-
 Installation
 ============
     
@@ -83,8 +78,7 @@ Examples
     yield UserDocument.remove({'_id': user_id})
 
 
-
-.. _MongoDB: http://mongodb.org/
-.. _Tornado: http://tornadoweb.org/
-.. _Motor: https://github.com/mongodb/motor/
+.. _MongoDB: http://mongodb.org
+.. _Tornado: http://tornadoweb.org
+.. _Motor: https://github.com/mongodb/motor
 
