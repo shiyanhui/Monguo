@@ -42,7 +42,7 @@ Examples
     from monguo import *
 
     Connection.connect('db') # connect to database
-    
+
     class UserDocument(Document):
         name  = StringField(required=True, unique=True, max_length=20)
         email = EmailField(required=True)
@@ -79,6 +79,9 @@ Examples
         {'_id': user_id}, 
         {'$set': {'age': 19}})
     
+    # delete
+    yield UserDocument.remove({'_id': user_id})
+
 
 
 .. _MongoDB: http://mongodb.org/
