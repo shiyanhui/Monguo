@@ -1,5 +1,5 @@
 :mod:`validator` -- Validate the document
-==============================================================
+=========================================
 
 .. automodule:: monguo.validator
 

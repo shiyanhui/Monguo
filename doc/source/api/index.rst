@@ -1,6 +1,3 @@
-Monguo API
-=========
-
 .. automodule:: monguo
 
 .. seealso:: :doc:`../tutorial`
