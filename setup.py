@@ -12,7 +12,8 @@ except ImportError:
     use_setuptools()
     from setuptools import setup, Feature
 
-import monguo
+# Removed because pip fails to install -r requirements.txt 
+#import monguo
 
 classifiers = """\
 Intended Audience :: Developers
@@ -31,7 +32,8 @@ Programming Language :: Python
 Programming Language :: Python :: Implementation :: CPython
 """
 
-version = monguo.__version__
+# Version definition in hardcode
+version = '0.2.2'
 description = 'Asynchronous MongoDB ORM for Tornado'
 long_description = open("README.rst").read()
 packages = ['monguo']
@@ -44,7 +46,9 @@ setup(name='monguo',
     author='Lime YH.Shi',
     author_email='shiyanhui66@gmail.com',
     url='https://github.com/shiyanhui/monguo',
-    install_requires=[],
+    install_requires=[
+        'motor >= 0.4',
+    ],
     license='http://www.apache.org/licenses/LICENSE-2.0',
     classifiers=filter(None, classifiers.split('\n')),
     keywords=[
