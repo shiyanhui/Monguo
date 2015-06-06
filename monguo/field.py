@@ -11,7 +11,7 @@ import inspect
 import sys
 import os
 import imp
-import cPickle as pickle
+#import cPickle as pickle
 
 from datetime import datetime, date, time
 from bson.dbref import DBRef
@@ -104,7 +104,7 @@ class StringField(Field):
 
         super(StringField, self).__init__(**kwargs)
 
-        if regex is not None and not isinstance(regex, basestring):
+        if regex is not None and not isinstance(regex, str):
             raise TypeError("Argument 'regex' should be string value.")
 
         if min_length is not None and not isinstance(min_length, (int, long)):
@@ -118,7 +118,7 @@ class StringField(Field):
         self.max_length = max_length
 
     def check_type(self, value):
-        if self.strict and not isinstance(value, (basestring, unicode)):
+        if self.strict and not isinstance(value, (str, unicode)):
             raise TypeError("'%s' is not string type." % value)
         try:
             value = unicode(value)
@@ -362,7 +362,7 @@ class ReferenceField(Field):
             return reference
 
         result = None
-        if isinstance(reference, basestring):
+        if isinstance(reference, str):
             stack = inspect.stack()
             for _ in stack:
                 if _[1] is not None:

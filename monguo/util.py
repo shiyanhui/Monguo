@@ -8,7 +8,7 @@
 import re
 
 def camel_to_underline(camel):
-    if not isinstance(camel, basestring):
+    if not isinstance(camel, str):
         raise TypeError('camel should be string type!')
         
     return ''.join([''.join(('_', item.lower())) 

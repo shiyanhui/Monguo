@@ -35,13 +35,13 @@ class Connection(object):
             :class:`~motor.MotorReplicaSetClient` instead of 
             :class:`~motor.MotorClient` to create a new connection. 
         '''
-        if db_name is not None and not isinstance(db_name, basestring):
+        if db_name is not None and not isinstance(db_name, str):
             raise TypeError("Argument 'db_name' should be str type.")
 
         if connection_name is None:
             connection_name = cls.DEFAULT_CONNECTION_NAME
 
-        if not isinstance(connection_name, basestring):
+        if not isinstance(connection_name, str):
             raise TypeError("Argument 'connection_name' should be str type.")
 
 
@@ -164,7 +164,7 @@ class Connection(object):
         :Parameters:
           - `connection_name`: The connection you switch to.
         '''
-        if not isinstance(connection_name, basestring):
+        if not isinstance(connection_name, str):
             raise TypeError("Argument 'connection_name' should be str type.")
             
         if connection_name not in cls.get_connection_name_list():
@@ -180,7 +180,7 @@ class Connection(object):
         :Parameters:
           - `db_name`: The database you switch to.
         '''
-        if not isinstance(db_name, basestring):
+        if not isinstance(db_name, str):
             raise TypeError("Argument 'db_name' should be str type.")
 
         cls._default_db = db_name
