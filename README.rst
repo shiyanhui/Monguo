@@ -8,10 +8,10 @@ Monguo
 :Info: Monguo is a full-featured, asynchronous MongoDB_ ORM with Motor_ dirver for Tornado_ applications.
 :Author: Lime YH.Shi
 
-.. image:: https://pypip.in/v/monguo/badge.png
+.. image:: https://img.shields.io/pypi/v/monguo.svg
         :target: https://crate.io/packages/monguo
 
-.. image:: https://pypip.in/d/monguo/badge.png
+.. image:: https://img.shields.io/pypi/dm/monguo.svg
         :target: https://crate.io/packages/monguo
 
 Installation
